@@ -1,0 +1,19 @@
+1) keyfile e top angle passados como argumentos:
+
+python AdjustTopAngle keyfile TopAngle
+
+NAO usao mais arquivo de controle
+
+2) copia a linha a ser alterada no keyfile com um comentario, logo acima do linha original
+
+3) assume que o no a ser alterado eh o no numero 1
+
+4) assume que o no onde o top angle e verificado eh o ultimo (numeracao mais alta) do modelo. nao se esqueca de descomentar o DOF6 do hangoff
+
+5) assume que o riser esta para Y negativo ( a funcao que altera o key sempre coloca no DOF2 do no1 um valor negativo
+
+6) verifica se o KEY file rodou com sucesso
+
+7) salva status no arquivo keyfile.taa
+
+8)durante a execucao do programa, mostra o status no titulo da janela de comando

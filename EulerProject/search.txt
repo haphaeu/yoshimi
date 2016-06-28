@@ -1,0 +1,1317 @@
+#returns the sum of the proper
+#divisors of n
+def sumProperDivisors(n):
+    sum=1
+    for i in range(2, (n>>1)+1): # n/2+1
+        if n%i==0: 
+            sum += i
+    return sum
+
+# list all abundant numbers up to N
+# A number n is called deficient if the 
+# sum of its proper divisors is less than 
+# n and it is called abundant if this sum exceeds n.
+def listAbundantNumbers(uptoN):
+    ab=[]
+    for i in range(12, uptoN):
+        if i < sumProperDivisors(i): ab.append(i)
+    return ab
+
+limit=58123
+numbers=[True]*limit
+print "Creating list of all abundant numbers up to",  limit
+abundantNumbers=listAbundantNumbers(limit)
+noAb=len(abundantNumbers)
+print noAb,  "abundant numbers found. Marking all possibilities of adding 2 of them together"
+for a1 in abundantNumbers:
+    for a2 in abundantNumbers:
+        if a1+a2 <= limit:
+            numbers[a1+a2-1] = False
+print "And finally, calculating the sum of all number which cannot be written as the sum of 2 abundant numbers"
+soma=0
+for i in range(limit):
+    if numbers[i]: soma+=i+1
+print sum(numbers),  "numbers match criterion."
+print "Their sum is",  soma
+from math import log10
+
+# Sieve of Eratosthenes for finding primes
+def primes(n):
+    if n<2: return []
+    num=n//2+n%2-1
+    pos=[True]*(num+1)
+    i_lim=int(n**0.5)>>1
+    for i in range(i_lim):
+        if not pos[i]: continue
+        start=(i*(i+3)<<1)+3
+        step=(i<<1)+3 
+        for j in range(start, num, step):
+            pos[j]=False
+    primes=[2]
+    primes.extend([(i<<1)+3 for i in range(num) if pos[i]])   
+    return primes
+
+def isConcatPrime(n1,n2):
+    c1=n1*10**(1+int(log10(n2)))+n2 # n1n2
+    c2=n2*10**(1+int(log10(n1)))+n1 # n2n1
+    if c1 in PrimeSet and c2 in PrimeSet:
+        return True
+    return False
+
+# ### MAIN ###
+print "Getting primes"
+PrimeLst=primes(int(1e8))
+print "Got %d primes" % len(PrimeLst)
+print "Creating set"
+PrimeSet=set(PrimeLst)
+sz=int(len(PrimeLst)**0.5)
+print "Iterating up to %d" % sz
+for i1 in range(0, sz-4):
+    #print '%d' % (100*i1/(sz-4)),
+    p1=PrimeLst[i1]
+    for i2 in range(i1+1,sz-3):
+        p2=PrimeLst[i2]
+        if not isConcatPrime(p1,p2): continue
+        for i3 in range(i2+1,sz-2):
+            p3=PrimeLst[i3]
+            if not isConcatPrime(p3,p2): continue
+            if not isConcatPrime(p3,p1): continue
+            for i4 in range(i3+1,sz-1):
+                p4=PrimeLst[i4]
+                if not isConcatPrime(p4,p3): continue
+                if not isConcatPrime(p4,p2): continue
+                if not isConcatPrime(p4,p1): continue
+                for i5 in range(i4+1,sz):
+                    p5=PrimeLst[i5]
+                    if not isConcatPrime(p5,p4): continue
+                    if not isConcatPrime(p5,p3): continue
+                    if not isConcatPrime(p5,p2): continue
+                    if not isConcatPrime(p5,p1): continue
+                    #if this point is reached, p1 to p5 all
+                    #concatenate to primes
+                    print p1, p2, p3, p4, p5, sum([p1,p2,p3,p4,p5])
+
+# Solution:
+# 13 5197 5701 6733 8389 26033
+
+# ### same as above but for 4 primes - to test example ###                    
+##for i1 in range(0, sz-3):
+##    p1=PrimeLst[i1]
+##    for i2 in range(i1+1,sz-2):
+##        p2=PrimeLst[i2]
+##        if not isConcatPrime(p1,p2): continue
+##        for i3 in range(i2+1,sz-1):
+##            p3=PrimeLst[i3]
+##            if not isConcatPrime(p3,p2): continue
+##            if not isConcatPrime(p3,p1): continue
+##            for i4 in range(i3+1,sz):
+##                p4=PrimeLst[i4]
+##                if not isConcatPrime(p4,p3): continue
+##                if not isConcatPrime(p4,p2): continue
+##                if not isConcatPrime(p4,p1): continue
+##                print p1, p2, p3, p4, sum([p1,p2,p3,p4])                   
+                
+            
+        
+
+
+
+# # # #
+# Project Euler - Problem 62
+#
+# The cube, 41063625 (345^3), can be permuted to produce two other cubes:
+# 56623104 (384^3) and 66430125 (405^3). In fact, 41063625 is the smallest cube
+# which has exactly three permutations of its digits which are also cube.
+#
+# Find the smallest cube for which exactly five permutations of its digits
+# are cube.
+# # # #
+
+def isCube(x):
+# returns True if x is a cube
+# returns False otherwise
+    tmp=1+int(x**0.333333333333333333333333)
+    if x==tmp**3: return True
+    return False
+
+def nextPermLexic(perm):
+# ###########################################################################
+#The following algorithm generates the next permutation lexicographically
+#after a given permutation. It changes the given permutation in-place.
+#1- Find the largest index k such that a[k] < a[k + 1]. If no such index
+#   exists, the permutation is the last permutation.
+#2- Find the largest index l such that a[k] < a[l]. Since k + 1 is such
+#   an index, l is well defined and satisfies k < l.
+#3- Swap a[k] with a[l].
+#4- Reverse the sequence from a[k + 1] up to and including the final
+#   element a[n].
+#
+# Written by R.Rossi, 26th/Oct/2011
+#
+# Reference:
+# http://en.wikipedia.org/wiki/Permutation#Generation_in_lexicographic_order
+# ###########################################################################
+    #will return the next permutation
+    #after 'perm' in lexicographic order
+    sz=len(perm)
+    #Step 1: find largest k st a[k]<a[k+1]
+    k= -666
+    for i in range(sz-2,-1,-1):
+        if perm[i] < perm[i+1]:
+            k=i
+            break
+    if k==-666:
+        #print "\nAchieved last permutation in lexicographic order"
+        return []
+    else:
+        #Step 2: find largest index l such that a[k] < a[l]
+        l=-666
+        if k==sz-2:
+            l=k+1
+        else:
+            for i in range(sz-1,k,-1):
+                if perm[k] < perm[i]:
+                    l=i
+                    break
+        if l==-666:
+            print "\nError! Oh my god, what to do?"
+            return []
+        else:
+            #step 3: Swap a[k] with a[l]
+            tmp=perm[0:k] + perm[l] + perm[k+1:l] + perm[k] + perm[l+1:]
+            #step 4: reverse a[k+1:]
+            tmp2=tmp[0:k+1] + tmp[-1:k:-1]
+            #done.
+            #save as perm
+            nextPerm=tmp2
+    return nextPerm
+
+# ### main
+n=1000
+limit = 10000
+while n<limit:
+    count=0
+    nc=n**3
+    while not nc ==[]:
+        nc=long(nc)
+        if isCube(nc):
+            count+=1
+        nc=nextPermLexic(str(nc))
+    if count==5:
+        print n**3
+    n+=1
+    if not n%(100):
+        print 100.*n/limit
+
+# output
+# 127035954683
+#
+# for n=5064
+# other cubic permutations are
+# 352045367981
+# 373559126408
+# 569310543872
+# 589323567104
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+#class for fraction
+# n / ( sqrt(N) - b )
+class myFrac():
+    def __init__(self,N,n,b,I):
+        self.N=N
+        self.n=n
+        self.b=b
+        self.I=I
+
+# this function does the job to
+# find the next continued fraction
+# by using algebra
+def nextFrac(f):
+    I=int(f.n/(f.N**0.5-f.b))
+    n=(f.N-f.b**2)/f.n
+    b=-((f.n+I*f.b)*f.b-I*f.N)/f.n
+    return myFrac(f.N,n,b,I)
+
+def getSeq(N):
+    a=int(N**0.5)
+    chk=[]
+    seq=[a]
+    f=myFrac(N,1,a,0)
+    while True:
+        f=nextFrac(f)
+        t=tuple([f.n,f.b])
+        if t in chk:
+            break
+        seq.append(f.I)
+        chk.append(t)
+    return seq
+
+# ### main ###
+from time import time
+st=time()
+ct=0
+for i in range(2,10001):
+    if int(i**0.5)==i**0.5: continue
+    if len(getSeq(i))%2==0: #if is even => period is odd
+        ct+=1
+print ct
+print time()-st
+# output 1332
+
+
+#create the sequence with the terms
+#of the continued fraction
+terms=100
+seq=[2]
+i=0; k=1
+while True:
+    if i==terms-1: break
+    seq.append(1)
+    i+=1
+    if i==terms-1: break
+    seq.append(2*k)
+    i+=1; k+=1
+    if i==terms-1: break
+    seq.append(1)
+    i+=1
+    if i==terms-1: break
+#and now calculate the fraction
+denominator=seq.pop()
+numerator=1
+while True:
+    try:
+        curr=seq.pop()
+        numerator=denominator*curr+numerator
+        #now inverse the fraction
+        tmp=numerator
+        numerator=denominator
+        denominator=tmp
+    except:
+        tmp=numerator
+        numerator=denominator
+        denominator=tmp
+        break
+print "The %dth term is %d/%d." % (terms, numerator,  denominator)
+#sum of the digits in the numerator
+strnum=str(numerator)
+soma=0
+for c in strnum: soma+= int(c)
+print "The sum of the digits in the numerator is %d." % soma
+
+#output
+#The 100th term is 
+#6963524437876961749120273824619538346438023188214475670667
+#/
+#2561737478789858711161539537921323010415623148113041714756.
+#The sum of the digits in the numerator is 272.
+
+"""
+#just a test
+sqrt2=2.5
+for i in range(20):sqrt2=2+1/sqrt2
+sqrt2=1+1/sqrt2
+print 2**.5-sqrt2
+#just another test    
+sqrt23=1.0
+for i in range(5):
+    sqrt23=8+1/sqrt23
+    sqrt23=1+1/sqrt23
+    sqrt23=3+1/sqrt23
+    sqrt23=1+1/sqrt23
+sqrt23=4+1/sqrt23
+print 23**.5-sqrt23
+#and another
+from math import exp
+e=1.0
+for i in range(10, 0, -1):
+    e=1+1/e
+    e=2*i+1/e
+    e=1+1/e
+e=2+1/e
+print exp(1.) - e
+"""
+'''
+Project Euler - Problem 69
+
+Euler's Totient function, f(n) [sometimes called the phi function], is used to
+determine the number of numbers less than n which are relatively prime to n.
+For example, as 1, 2, 4, 5, 7, and 8, are all less than nine and relatively
+prime to nine, f(9)=6.
+
+n   Relatively Prime    f(n)    n/f(n)
+2          1             1        2
+3          1,2           2        1.5
+4          1,3           2        2
+5          1,2,3,4       4        1.25
+6          1,5           2        3
+7          1,2,3,4,5,6   6        1.1666...
+8          1,3,5,7       4        2
+9          1,2,4,5,7,8   6        1.5
+10         1,3,7,9       4        2.5
+
+It can be seen that n=6 produces a maximum n/f(n) for n<=10.
+
+Find the value of n <= 1,000,000 for which n/f(n) is a maximum.
+'''
+
+#return the prime factors of a number
+#second argument 'all' is a boolean
+#saying if all instances of a repeated
+#prime should be returned, e.g.:
+# factors(12, True)  = [3, 2, 2]
+# factors(12, False) = [3, 2]
+def primeFactors(n, all):
+    if n == 1: return [1]  
+    i = 2  
+    limit = n**0.5  
+    while i <= limit:  
+        if n % i == 0:  
+            ret = primeFactors(n/i,all)
+            if all: ret.append(i)
+            elif not i==ret[-1]: ret.append(i)
+            return ret  
+        i += 1  
+    return [n]  
+
+# return the Euler's totient phi of a number
+#
+# for a positive integer n, the totient of n is defined as
+# the number of positive integers less than or equal to n
+# that are co-primes to n (ie,having no common factors other
+# than 1)
+#
+# In other words, specifically for this problem, given a
+# fraction n/d, if n and d are co-primes, the fraction cannot
+# be simplified and henceforth is resilient.
+#
+# Extending this, for a denominator d, the numbers of
+# numerators which are co-prime to d is the resilience
+# of that denominator - as those fraction cannot be
+# simplified. And is exaclty that that the
+# totient gives => hence: resilience(d)=phi(d)
+#
+# Computation:
+# phi(n)= n . prod(1-1/p)
+# for p ranging only over distinct prime factors of n
+# hence:
+# phi(n)=n.(1-1/p1)(1-1/p2)(1-1/p3)...
+#
+#http://en.wikipedia.org/wiki/Euler's_totient_function
+def totient(x):
+    t = x
+    for k in primeFactors(x, False):
+        t -= t // k
+    return t
+
+
+#main starts here
+n=2
+maxratio=-1
+maxn=-1
+while n<=1000000:
+    ratio=float(n)/totient(n)
+    if ratio>maxratio:
+        maxratio = ratio
+        maxn     = n
+    n+=1
+print maxn, maxratio
+
+#output is
+#510510 5.53938802083
+
+'''
+Also, a more elegant solution, as pointed out in the forum:
+
+A maximum for n/totient(n) occurs for a minimum of totient(n).
+The totient(n) gives the numbers of co-primes of n.
+To find a minimum for totient(n), one needs to find a number
+with very few co-primes. *Hence, a product of primes*
+Multiplying all smallest primes so that the product is smaller
+then 1,000,000:
+p     prod
+2        2
+3        6
+5       30
+7      210
+11    2310
+13   30030
+17  510510 <- this is our guy :D
+19 9699690
+
+
+
+'''
+# -*- coding: utf-8 -*-
+'''
+Project Euler - Problem 70
+
+Euler's Totient function, phi(n) [sometimes called the phi function], is used
+to determine the number of positive numbers less than or equal to n which are
+relatively prime to n. For example, as 1, 2, 4, 5, 7, and 8, are all less than
+nine and relatively prime to nine, phi(9)=6.
+The number 1 is considered to be relatively prime to every positive number, so
+phi(1)=1.
+
+Interestingly, phi(87109)=79180, and it can be seen that 87109 is a permutation
+of 79180.
+
+Find the value of n, 1<n<10^7, for which phi(n) is a permutation of n and the
+ratio n/phi(n) produces a minimum.
+'''
+
+#return the prime factors of a number
+#second argument 'all' is a boolean
+#saying if all instances of a repeated
+#prime should be returned, e.g.:
+# factors(12, True)  = [3, 2, 2]
+# factors(12, False) = [3, 2]
+def primeFactors(n, all):
+    if n == 1: return [1]  
+    i = 2  
+    limit = n**0.5  
+    while i <= limit:  
+        if n % i == 0:  
+            ret = primeFactors(n/i,all)
+            if all: ret.append(i)
+            elif not i==ret[-1]: ret.append(i)
+            return ret  
+        i += 1  
+    return [n]  
+
+# return the Euler's totient phi of a number
+#
+# for a positive integer n, the totient of n is defined as
+# the number of positive integers less than or equal to n
+# that are co-primes to n (ie,having no common factors other
+# than 1)
+#
+# In other words, specifically for this problem, given a
+# fraction n/d, if n and d are co-primes, the fraction cannot
+# be simplified and henceforth is resilient.
+#
+# Extending this, for a denominator d, the numbers of
+# numerators which are co-prime to d is the resilience
+# of that denominator - as those fraction cannot be
+# simplified. And is exaclty that that the
+# totient gives => hence: resilience(d)=phi(d)
+#
+# Computation:
+# phi(n)= n . prod(1-1/p)
+# for p ranging only over distinct prime factors of n
+# hence:
+# phi(n)=n.(1-1/p1)(1-1/p2)(1-1/p3)...
+#
+#http://en.wikipedia.org/wiki/Euler's_totient_function
+def totient(x):
+    t = x
+    for k in primeFactors(x, False):
+        t -= t // k
+    return t
+
+def isPermutation(n1, n2):
+    a=[c for c in str(n1)]
+    b=[c for c in str(n2)]
+    a.sort()
+    b.sort()
+    if a==b: return True
+    return False
+
+
+#main starts here
+from time import time
+t=time()
+n=2
+minratio=999
+minn=999
+while n<=1e7:
+    tot = totient(n)
+    if isPermutation(n, tot):
+        ratio=float(n)/tot
+        if ratio<minratio:
+            minratio = ratio
+            minn     = n
+            print minn, totient(minn), minratio
+    n+=1
+print "Took %.3fs" % (time()-t)
+
+'''output is
+21 12 1.75
+291 192 1.515625
+2817 1872 1.50480769231
+2991 1992 1.5015060241
+4435 3544 1.25141083521
+20617 20176 1.02185765266
+45421 44512 1.02042145938
+69271 67912 1.02001119095
+75841 75184 1.0087385614
+162619 161296 1.00820231128
+176569 175696 1.00496880976
+284029 282940 1.00384887255
+400399 399040 1.00340567362
+474883 473488 1.00294622039
+732031 730312 1.00235378852
+778669 776896 1.00228215874
+783169 781396 1.00226901597
+1014109 1011904 1.00217906046
+1288663 1286368 1.00178409289
+1504051 1501504 1.00169629918
+1514419 1511944 1.00163696539
+1924891 1921984 1.00151249958
+1956103 1953160 1.001506789
+2006737 2003776 1.00147771008
+2044501 2041504 1.00146803533
+2094901 2091904 1.00143266613
+2239261 2236192 1.0013724224
+2710627 2707216 1.00125996596
+2868469 2864896 1.00124716569
+3582907 3578920 1.00111402322
+3689251 3685192 1.00110143515
+4198273 4193728 1.00108376127
+4696009 4690960 1.00107632553
+5050429 5045920 1.00089359324
+5380657 5375860 1.00089232234
+5886817 5881876 1.00084003811
+6018163 6013168 1.00083067694
+6636841 6631684 1.00077763054
+7026037 7020736 1.00075504904
+7357291 7351792 1.0007479809
+7507321 7501732 1.00074502795
+8316907 8310976 1.0007136346
+8319823 8313928 1.00070905112
+Took 1108.932s
+'''
+'''
+Project Euler - Problem 71
+
+Consider the fraction, n/d, where n and d are positive integers. If n<d and
+HCF(n,d)=1, it is called a reduced proper fraction.
+
+If we list the set of reduced proper fractions for d<=8 in ascending order of
+size, we get:
+
+1/8, 1/7, 1/6, 1/5, 1/4, 2/7, 1/3, 3/8, 2/5, 3/7, 1/2, 4/7, 3/5, 5/8, 2/3, 5/7,
+3/4, 4/5, 5/6, 6/7, 7/8
+
+It can be seen that 2/5 is the fraction immediately to the left of 3/7.
+
+By listing the set of reduced proper fractions for d<=1,000,000 in ascending
+order of size, find the numerator of the fraction immediately to the left of
+3/7.
+'''
+
+from math import ceil
+
+#return the prime factors of a number
+#second argument 'all' is a boolean
+#saying if all instances of a repeated
+#prime should be returned, e.g.:
+# factors(12, True)  = [3, 2, 2]
+# factors(12, False) = [3, 2]
+def primeFactors(n, all):
+    if n == 1: return [1]  
+    i = 2  
+    limit = n**0.5  
+    while i <= limit:  
+        if n % i == 0:  
+            ret = primeFactors(n/i,all)
+            if all: ret.append(i)
+            elif not i==ret[-1]: ret.append(i)
+            return ret  
+        i += 1  
+    return [n] 
+
+#main
+
+target_n = 3
+target_d = 7
+max_d = 1000000
+
+#Idea: we want to be smaller than and as close as possible to 3/7.
+#The smallest steps occurs for the largest denominators d.
+#Algotithm is:
+#   1- assuming the max d, 1000000
+#   2- calculate n such that n/d<=3/7
+#   3- if n/d is a proper fraction, stop, answer found.
+#   4- if not, reduce n by 1 and repeat step 2.
+# ###
+
+# calculates the maximum numerator for which n/d<3/7, d=1000000
+max_n = max_d * target_n/target_d
+# now iterates n<max_n and finds a d<max_d
+# which result in a proper fraction
+n=max_n
+while n>1:
+    d=int(ceil(float(n)*target_d/target_n))
+    #check is n/d is proper fraction
+    if set(primeFactors(n,False)).intersection(
+       set(primeFactors(d,False)))==set():
+        print n
+        break
+    n-=1
+
+#output
+# 428570
+'''
+Project Euler - Problem 72
+
+Consider the fraction, n/d, where n and d are positive integers. If n<d and
+HCF(n,d)=1, it is called a reduced proper fraction.
+
+If we list the set of reduced proper fractions for d<=8 in ascending order
+of size, we get:
+
+1/8, 1/7, 1/6, 1/5, 1/4, 2/7, 1/3, 3/8, 2/5, 3/7, 1/2, 4/7, 3/5, 5/8, 2/3,
+5/7, 3/4, 4/5, 5/6, 6/7, 7/8
+
+It can be seen that there are 21 elements in this set.
+
+How many elements would be contained in the set of reduced proper fractions
+for d<=1,000,000?
+
+Solution:
+=========
+
+For each denominator d, the fraction n/d is a proper fraction if n and d do
+not have any common division rather than one, in other words, n/d is a proper
+fraction for all n which are co-primes of d. This is the definition of the
+totient function. Hence, for d varying from 1 to 1e6, need to add totient(d).
+
+Note:
+If d is a prime, all n/d are proper fractions. But adding this to the code
+does not decrease running time notably. I tested and run only 25% faster...
+'''
+
+from time import time
+
+#MODIFIED - return SET, do NOT repeat
+#return the prime factors of a number
+# factors(12) = set([3, 2])
+def primeFactors(n):
+    if n == 1: return set([1])
+    i = 2  
+    limit = n**0.5  
+    while i <= limit:  
+        if n % i == 0:  
+            ret = primeFactors(n/i)
+            ret.add(i)
+            return ret  
+        i += 1  
+    return set([n])
+
+#http://en.wikipedia.org/wiki/Euler's_totient_function
+def totient(x):
+    t = x
+    for k in primeFactors(x):
+        t -= t // k
+    return t
+
+#main starts here
+st=time()
+max_d=int(1e6)
+d=2
+c=0
+while d<=max_d:
+    c+=totient(d)
+    d+=1
+    
+print "Total number of proper fractions: %d" % c
+print "Took %.3fs" % (time()-st)
+
+#output
+#Total number of proper fractions: 303963552391
+#Took 23.951s
+'''
+Project Euler - Problem 73
+
+totally stupdly brute force floating point error subject method o_O
+but works =P
+'''
+a=set()
+t=1./3
+h=1./2
+for d in xrange(2,12001):
+    for n in xrange(1,d):
+        b=float(n)/d
+        if b>t and b<h:
+            a.add(b)
+print len(a)
+#output
+# 7295372
+        
+'''
+Project Euler - Problem 74
+http://projecteuler.net/problem=74
+
+Factorial chains...
+
+145 => 1! + 4! + 5! = 1 + 24 + 120 = 145
+hence, 145 has a chain with only 1 element
+
+69 => 363600 => 1454 => 169 => 363601 ( => 1454 )
+hence, 69 has a chain of 5 elements.
+
+How many numbers below 1 million have a factorial
+chain with 60 non-repeating elements?
+
+'''
+from math import factorial as fact
+from time import time
+
+#counts the length of the factorial chain starting at n
+def length(n):
+    l=[n]
+    m=nxt(n)
+    while m not in l:
+        l.append(m)
+        m=nxt(m)
+    return len(l)
+
+#calculates the next term of the factorial chain
+nxt = lambda n: sum([fact(int(a)) for a in str(n)])
+
+#start main code here
+st=time()
+n=1
+c=0
+while n<=10000:
+    if length(n)==60:
+        c+=1
+        print n,
+    n+=1
+print c
+print time()-st
+
+#output
+# 402
+# took 5minutes
+'''
+Project Euler - Problem 74
+http://projecteuler.net/problem=74
+
+Factorial chains...
+
+145 => 1! + 4! + 5! = 1 + 24 + 120 = 145
+hence, 145 has a chain with only 1 element
+
+69 => 363600 => 1454 => 169 => 363601 ( => 1454 )
+hence, 69 has a chain of 5 elements.
+
+How many numbers below 1 million have a factorial
+chain with 60 non-repeating elements?
+
+'''
+from math import factorial as fact
+from math import log10
+from time import time
+
+#counts the length of the factorial chain starting at n
+def length(n):
+    l=[n]
+    m=nxt(n)
+    while m not in l:
+        l.append(m)
+        m=nxt(m)
+    return len(l)
+
+#calculates the next term of the factorial chain
+def nxt(n):
+    if n<10: return fact(n)
+    order = int(log10(n))      #order of n
+    digit = n/10**order        #leftmost digit
+    rest  = n-digit*10**order  #rest of n w/o its leftmost digit
+    if rest: orest = int(log10(rest))   #order of the rest
+    else:    orest = 0
+    zeros = order-orest-1      #if n has no zeros in it, orest=order-1
+                               #if it has zeros, need to accont for them
+                               #noting that 0! = 1
+    return fact(digit) + zeros + nxt(rest)
+
+#start main code here
+st=time()
+n=1
+c=0
+while n<=1000000:
+    if length(n)==60:
+        c+=1
+        #print n,
+    n+=1
+print c
+print time()-st
+
+#output
+# 402
+# took less than a minute, due to the optimisation of the next term function
+# not using list of strings, but log10 instead
+'''
+Project Euler Problem 75
+Given that L is the length of the wire, for how many values of
+L<=1,500,000 can exactly one integer sided right angle triangle be formed?
+
+---
+
+The following will generate all Pythagorean triples uniquely:
+    a = k (m^2 - n^2) 
+    b = k 2mn 
+    c = k (m^2 + n^2)
+where m, n, and k are positive integers with m > n, m - n odd, and
+with m and n coprime.
+http://en.wikipedia.org/wiki/Pythagorean_triple#Generating_a_triple
+
+Generating all coprime pairs
+All pairs of coprime numbers m, n can be arranged in a pair of disjoint
+complete ternary trees, starting from (2,1) (for even-odd or odd-even pairs)
+or from (3,1) (for odd-odd pairs).
+The children of each vertex (m,n) are generated as follows:
+Branch 1: (2m-n,m)
+Branch 2: (2m+n,m)
+Branch 3: (m+2n,n)
+http://en.wikipedia.org/wiki/Coprime#Generating_all_coprime_pairs
+
+Note that the co-prime tree starting with (3,1) will result in odd-odd
+pair, which will give even m-n and hence is not valid to generate
+the Pythagorean triples, since its required that m-n be odd.
+
+** Also note that each generated pair (m,n) WILL GENERATE 3 CHILDREN
+** Each branch has 3 branches, the tree expands 3^n.
+
+'''
+
+def gen_coprime_pairs(m=2,n=1,LIM=900):
+    m1=2*m-n; n1=m
+    m2=2*m+n; n2=m
+    m3=m+2*n; n3=n
+    pairs=[]
+    if m1<LIM and n1<LIM:
+        pairs.append((m1,n1))
+        pairs.extend(gen_coprime_pairs(m1,n1,LIM))
+    if m2<LIM and n2<LIM:
+        pairs.append((m2,n2))
+        pairs.extend(gen_coprime_pairs(m2,n2,LIM))
+    if m3<LIM and n3<LIM:
+        pairs.append((m3,n3))
+        pairs.extend(gen_coprime_pairs(m3,n3,LIM))
+    return pairs
+
+
+# ## MAIN
+
+#generate a set of coprime pairs
+CoprimePairs=[(2,1)]
+CoprimePairs.extend(gen_coprime_pairs())
+
+#limit for the length of the wire
+limit=1500000
+
+#initialise array used to count ocurrences
+L=[0]*1500001
+
+#loop through all coprime pairs
+for cp in CoprimePairs:
+    m=cp[0]
+    n=cp[1]
+    a=m*m-n*n
+    b=2*m*n
+    c=m*m+n*n
+    length=a+b+c
+    if length>limit: continue
+    #print a,b,c, a+b+c
+    #mark all non-primitive
+    for i in range(length,limit+1,length):
+        L[i]+=1
+print L.count(1)
+# output
+# 161667
+'''
+Partition (number theory)
+http://en.wikipedia.org/wiki/Integer_partition
+'''
+
+# Base sequence for pentagonal numbers
+#http://en.wikipedia.org/wiki/Pentagonal_numbers
+def BaseSeq(limit):
+    bs = []
+    for i in range(1,limit):
+        bs.append(i)
+        bs.append(-i)
+    return bs
+
+# List of the generalised pentagonal numbers
+#http://en.wikipedia.org/wiki/Pentagonal_numbers
+def GeneralPenta(BaseSeq):
+    return [k*(3*k-1)/2 for k in BaseSeq]
+
+#Formula for Partition of a number
+#http://en.wikipedia.org/wiki/Integer_partition#Exact_formula
+#
+#This is a recursive approach, not good
+#Too many calls will be made for the same number
+#again and again...
+def Partition(n):
+    if n<0: return 0 # p(negative)=0
+    if n==0: return 1 # p(0)=p(1)=1
+    i=0
+    p=0
+    while g[i]<=n:
+        p+=int((-1)**(k[i]-1)) * Partition(n-g[i])
+        i+=1
+    return p
+
+#OK! This version does not use recursion
+#It just starts from 1 and saves all the
+#partitions of the smaller numbers
+def Partition2(n):
+    p=[1] #p(0)=1
+    for m in range(1,n+1):
+        pm=0
+        i=0
+        while g[i]<=m:
+            pm+=int((-1)**(k[i]-1)) * p[m-g[i]]
+            i+=1
+        p.append(pm)
+    return p[-1]
+    
+k = BaseSeq(20)
+g = GeneralPenta(k)
+
+#Check - should return the following:
+'''
+first element is p(0)
+check=[1,1,2,3,5,7,11,15,22,30,42,56,77,101,135,176,231,
+ 297,385,490,627,792,1002,1255,1575,1958,2436,3010,
+ 3718,4565,5604,6842,8349,10143,12310,14883,17977,
+ 21637,26015,31185,37338,44583,53174,63261,75175,
+ 89134,105558,124754,147273,173525]
+'''
+
+print Partition2(100)
+# p(100)=190569292
+# Note that the real answer of the problem 76 is p(100)-1
+#so, 190569291
+
+    
+# Project Euler Problem 078
+# Partitions
+# http://en.wikipedia.org/wiki/Partition_(number_theory)#Exact_formula
+#
+# if n<0: p(n)=0
+# if n=0: p(n)=1
+# else:   p(n)=sum_k( (-1)**(k-1) * p(n-g_k) )
+#         where g_k=k(3k-1)/2, for k nonzero (negative and positive)
+#
+# solving limits for k such that n-g_k>=0:
+#       n = k(3k-1)/2
+#       3k^2 - k - 2n = 0
+#   =>  k = ( 1 +/- sqrt(24n+1) ) / 6
+#
+# That's all folks.
+def part(n):
+    if n==0: return 1
+    _ = 0
+    LIM=1+int((1+(24*n+1)**0.5)/6)
+    for k in range(-LIM,LIM):
+        if k==0: continue
+        idx=n-k*(3*k-1)/2
+        if 0<=idx<n:
+            _ += int((-1)**(k-1)) * p[idx]
+    return _
+
+NUM=int(1e6)
+p=[0]*NUM
+for i in xrange(int(NUM)):
+    p[i]=part(i)
+    #print i, p[i]
+    if p[i]%1000000==0: break
+print i, p[i]
+# 55374 36325300925435785930832331577396761646715836173633893227071086460709268608053489541731404543537668438991170680745272159154493740615385823202158167635276250554555342115855424598920159035413044811245082197335097953570911884252410730174907784762924663654000000
+    
+#argument must be integer
+def pair(num):
+    pairs=[]
+    while num>99:
+        pairs.append(num%100)
+        num/=100
+    pairs.append(num)
+    pairs.reverse()
+    return pairs
+# ##################################
+# sum the first 100 digits
+# of the square root of num
+def sum100d(num):
+    sqr=0
+    pairs=pair(num)
+    sz=len(pairs)
+    n=pairs[0]
+    sqr=int(n**0.5)
+    resto=n
+    tmp=sqr*sqr
+    i=1; decpt=0
+    sumOfDecimalDigits=sqr
+    flag=False
+    while True:
+        if i>=sz:
+            add=0
+            decpt+=1
+        else:
+            add=pairs[i]    
+        resto=(resto-tmp)*100+add
+        if resto==0: break
+        n=9
+        while True: #next digit of sqrt
+            tmp=(2*sqr*10+n)*n
+            if tmp<resto: break
+            n-=1
+        sqr=sqr*10+n
+        sumOfDecimalDigits+=n
+        i+=1
+        if i==100: break
+    #print decpt, sqr
+    return sumOfDecimalDigits
+# ### MAIN ###
+soma=0
+for i in range(2,100):
+    if not int(i**0.5)==i**0.5:
+        soma+=sum100d(i)
+print soma
+        
+    
+    
+    
+
+
+# http://projecteuler.net/problem=85
+#grid size
+from time import time
+t0=time()
+target=2e6
+minerr=9e9
+for m in range(30,90):
+    for n in range(30,m+1):
+        ct=0
+        for k in range(1,m+1):
+            for l in range(1,n+1):
+                ct+=(m-k+1)*(n-l+1)
+        err=abs(target-ct)
+        if err<minerr:
+            minerr=err
+            min_ct=ct
+            min_m =m
+            min_n =n
+print min_m,min_n,min_ct,min_m*min_n
+print "took %.2fms" % (1000*(time()-t0))
+# output:
+# 77 36 1999998 2772
+#
+# or, clever Partha's idea:
+# A grid m by n has m+1 by n+1 lines.
+# Any rectangle is limited by 2 lines in each way.
+# Ao, the number of rectangle is all the possible
+# combination of 2 lines amongst the total number of lines.
+# This applies in both directions, then:
+# grid (m,n)
+# number of rectangles = comb(m+1,2) * comb(n+1,2)
+# = (m+1)! / 2 / (m-1)! * (n+1)! / 2 / (n-1)!
+# = (m+1)*m * (n+1)*n /4
+# :)
+#
+t0=time()
+minerr=9e9
+for m in range(30,90):
+    for n in range(30,m+1):
+        ct=(m+1)*m*(n+1)*n/4
+        err=abs(target-ct)
+        if err<minerr:
+            minerr=err
+            min_ct=ct
+            min_m =m
+            min_n =n
+print min_m,min_n,min_ct,min_m*min_n
+print "took %.2fms" % (1000*(time()-t0))
+#
+#
+# now attempt to solve this by root finding
+# f(m,n)= (m+1)*m * (n+1)*n /4 - 2e6
+# simple way to find minimum is converting f
+# to f(n), fixing m0, then loops through only n
+# f(n) = (n+1)*n * (m0+1)*m0 /4 - 2e6
+# using Bhaskara:
+# n= -1 + sqrt(1+32e6/mo/(mo+1))/2
+#
+t0=time()
+minerr=9e9
+for m in range(30,90):
+    n=int(round(-1 + (1+32e6/m/(m+1))**0.5/2))
+    ct=(m+1)*m*(n+1)*n/4
+    err=abs(target-ct)
+    if err<minerr:
+            minerr=err
+            min_ct=ct
+            min_m =m
+            min_n =n
+print min_m,min_n,min_ct,min_m*min_n
+print "took %.2fms" % (1000*(time()-t0))
+# bs
+''' Problem 86
+A spider, S, sits in one corner of a cuboid room, measuring 6 by 5 by 3,
+and a fly, F, sits in the opposite corner. By travelling on the surfaces
+of the room the shortest "straight line" distance from S to F is 10 and
+the path is shown on the diagram.
+
+However, there are up to three "shortest" path candidates for any given
+cuboid and the shortest route doesn't always have integer length.
+
+By considering all cuboid rooms with integer dimensions, up to a maximum
+size of M by M by M, there are exactly 2060 cuboids for which the shortest
+route has integer length when M=100, and this is the least value of M for
+which the number of solutions first exceeds two thousand; the number of
+solutions is 1975 when M=99.
+
+Find the least value of M such that the number of solutions first exceeds
+one million.
+
+
+---
+Solution:
+
+taking a cube of size (x y z) with x <= y <= z,
+the shortest path will always be
+path(x,y,z) = sqrt( (x+y)^2 + z^2 )
+
+so the result for any M is counting all the different instances for x y z
+satisfying 1 <= x <= y <= z <= M 
+where path(x,y,z) is an integer
+
+there are a lot of combinations of x and y where path
+computes essentially the same value, so to save time, j = x + y can be
+substituted and the results multiplied by the number of combinations
+of x and y that can make j
+
+sum = 0
+loop for i from 1 to M
+  loop for j from 2 to 2*i
+    if path_is_integral (i j) then sum = sum + (combinations i j)
+
+where combinations (i j) is the number of ways to choose x and y
+satisfying 1 <= x <= y <= i and x + y = j
+
+the number of combinations can be expressed as
+int(j/2) - max(j-1,1) + 1
+
+****
+
+Note: there might be some other fancy math solution involving
+Pythagorean triples, coprimes, totient... check:
+http://en.wikipedia.org/wiki/Integer_triangle#Pythagorean_triangles
+http://en.wikipedia.org/wiki/Coprime
+http://en.wikipedia.org/wiki/Coprime#Generating_all_coprime_pairs
+
+'''
+
+'''runs in few seconds'''
+M=5000 #upper limit for checking
+ct=0
+for i in range(1,M+1):
+    for j in range(2,2*i+1):
+        path = (j**2+i**2)**0.5
+        if path==int(path):             #number of ways to choose x and y satisfying
+            ct+=int(j/2)-max(j-i,1)+1   # 1 <= x <= y <= i and x + y = j
+    if ct>1e6:
+        print i, ct
+        break
+
+'''
+# old, works, but totally brute force one
+# ==> takes 5-10min to run            
+M=10
+ct=0
+for i in range(1,M+1):
+    for j in range(i,M+1):
+        for k in range(j,M+1):
+            path = (k**2+(i+j)**2)**0.5 #always k>j>i
+            if path==int(path):
+                print i,j+k
+                ct+=1
+print ct
+'''
+'''
+Check for speed
+
+Need to get each digit of a number and sum them.
+Which is faster:
+1. use a list of strings
+2. calculate using log
+
+Conclusion:
+
+splitting the digits of a number is faster using math calculation with log
+than using string conversion. Log showed up to be 2.76x faster!
+
+Disadvantage is that using log is more complex.
+Str lambda function is 1 liner.
+
+>>>See project euler problem 74, which run 5x faster using logs!!
+
+'''
+from math import log10
+from time import time
+
+#sum the digits of a number, using log
+def sum_log(n):
+    if n<10: return n
+    o=int(log10(n))
+    d = n/10**o
+    return d + sum_log(n-d*10**o)
+
+#sum the digits of a number, using string conversion
+sum_str = lambda n: sum([int(a) for a in str(n)])
+
+#and now check which one is faster
+iters=100000
+r=1
+while r<=3:
+    t0=time()
+    i=1
+    while i<=iters:
+        s=sum_str(i)
+        i+=1
+    t1=time()
+    i=1
+    while i<=iters:
+        s=sum_log(i)
+        i+=1
+    tf=time()
+    print "Trial %d - str took %.3fs and log took %.3fs" % (r, t1-t0, tf-t1),
+    print " - log is %.2f times faster than str" % ((t1-t0)/(tf-t1))
+    r+=1
+
+'''
+output
+Trial 1 - str took 0.717s and log took 0.266s  - log is 2.70 times faster than str
+Trial 2 - str took 0.718s and log took 0.249s  - log is 2.88 times faster than str
+Trial 3 - str took 0.717s and log took 0.265s  - log is 2.71 times faster than str
+'''
+#gcd - Greatest Commom Divisor
+#in this problem, the use is
+#if gcd==1: a and b are Coprimes
+#http://en.wikipedia.org/wiki/Euclidean_algorithm#Implementations
+def gcd(a, b):
+    while not a == b:
+        if a > b:
+           a = a - b
+        else:
+           b = b - a
+    return a

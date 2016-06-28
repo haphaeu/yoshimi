@@ -1,0 +1,9 @@
+Como rodar:
+
+1- abra 2 prompts de comando nesta pasta
+2- em um deles, rode o script setAffinity.py
+3- no outro, rode a BAT setAf.bat
+4- enjoy ;)
+
+
+RR - 22/12/2010

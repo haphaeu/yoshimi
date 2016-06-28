@@ -1,0 +1,36 @@
+Essa pasta contem um scrpt em python para hackear o gerenciador de licensas do Flexcom e fazer com que o Flexcom rode em todas as CPUs do computador, mesmo que a licensa seja restrita a apenas 1 ou poucas CPUs.
+
+O script usa o programa process.exe:
+> Command Line Process Viewer/Killer/Suspender for Windows NT/2000/XP V2.03
+> Copyright(C) 2002-2003 Craig.Peacock@beyondlogic.org
+
+Fluxograma resumido do script am python:
+
+1- chama o comando
+     process.exe | find "flex3.exe" > processIDs.txt
+   que lista e filtra os processos rodando flexcom e as respectivas IDs.
+
+2- em python, salva somente as IDs dos processos rodando flexcom
+
+3- em python, cria uma bat para setar a afinidade dos IDs de flexcom com as CPUs disponiveis de acordo com uma máscada definida pelo usuário. Restrição: apenas os primeiro 8 processos flexcom são salvos na BAT. caso existam mais de 8, os últimos são descartados. caso existam menos, a bat terá linhas DUMMY, para avitar erro ao atualizar a bat.
+
+4- espera alguns segundos e depois retorna ao passo 1
+
+Em paralelo ao script em python, o usuário deverá rodar a BAT criada pelo script. Essa bat será a responsável por chamar o programa process.exe que definita a afinidade dos processos flexcom com os processadores definidos por uma mascara. Essa BAt vai sendo atualizada em background pelo script em python.
+
+Em resumo, como rodar o programa:
+
+1- abra 2 prompts de comando na pasta do script setAffinity.py
+2- em um deles, rode o script setAffinity.py
+3- no outro, rode a BAT setAf.bat
+4- enjoy ;)
+
+
+OBSERVACOES
+===========
+
+No momento, o loop que atualiza a bat e o tempo de espera nao estao bem feitos/calibrados. 
+Vale a pena pensar nisso e em um criterio de saida, por exemplo, se nao tiver mais janelas flexcom rodando.
+
+
+RR - 22/12/2010

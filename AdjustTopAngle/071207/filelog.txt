@@ -1,0 +1,13 @@
+1) le arquivo controle "TopAngle.dat"
+ - considera somente uma linha na forma
+   nome_T_key top_angle
+
+2) copia key para TopAngle.key
+
+3) assume que o no a ser alterado eh o no numero 1
+
+4) assume que o no onde o top angle e verificado eh o ultimo (numeracao mais alta) do modelo
+
+5) assume que o riser esta para Y negativo ( a funcao que altera o key sempre coloca no DOF2 do no1 um valor negativo
+
+6) 

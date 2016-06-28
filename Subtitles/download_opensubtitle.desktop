@@ -1,0 +1,10 @@
+[Desktop Entry]
+Actions=trim;
+Encoding=UTF-8
+ServiceTypes=video/*
+
+[Desktop Action trim]
+Exec=download_opensubtitle.py "%F"
+Name=Download subtitle for this video
+Name[es]=Descargar subtitulo para este video
+Icon=txt

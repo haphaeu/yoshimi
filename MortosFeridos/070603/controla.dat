@@ -1,0 +1,4 @@
+*AnalysisType S
+*Time-steps   0.2 0.05
+*Tolerances   0.02 0.035
+*MinTorque    10000

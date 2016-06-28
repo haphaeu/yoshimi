@@ -1,0 +1,40 @@
+<!-- $Header: /aplic/ITED/src/repository/aplic/ITED/www/htdocs/common/html/buttons.html,v 1.8 2002-12-18 14:50:10-02 e007413 EP $ -->
+<html><head>
+<meta content="text/html;CHARSET=iso-8859-1" http-equiv="Content-Type">
+<meta content="no-cache" http-equiv="pragma">
+<meta content="Wed, 01 Jan 1998 1:00:00 GMT" http-equiv="Expires">
+<script language="JavaScript">
+function create(){}
+function add(){}
+function show(){}
+function change(){}
+var myBarra=null,n=navigator.appName,v=String(navigator.appVersion),
+NS=(n.indexOf("Netscape")!=-1),ver=parseFloat(v,10),
+f=(NS?(ver>=4&&ver<5?'ns':'iemacns6'):(v.indexOf("Mac")!=-1?'iemac':'ie_2_0'));
+	document.write('<script language="javascript" src="/ITE/common/scripts/buttons_new/f'+f+'.js"><\/script>');
+	document.write('<script language="JavaScript" src="/ITE/common/scripts/buttons_new/common'+(NS||v.indexOf("Mac")==-1?'_2_0':'mac')+'.js"><\/script>');
+</script>
+<script language="JavaScript" src="/ITE/common/scripts/buttons_new/bt_list.js"></script>
+<style type="text/css">
+.Pt1IE,#Pt1IE{font-size:1px;font-family:Courier New,Helvetica;color:#ffffff}
+.Pt1NS,#Pt1NS{font-size:1pt;font-family:Courier New,Helvetica;color:#ffffff}
+</style>
+</head>
+<body onload="" onresize="if(NS&ver<5&&myBarra&&myBarra.reposition)myBarra.reposition();" bgcolor="#ffffff">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr bgcolor="#E1E1E1">
+<td width="100%" height="1"><img width="1" height="1"></td>
+</tr>
+</table>
+<div style="position:relative" name="dOther" id="dOther">
+<script language="JavaScript"><!--
+if(v.indexOf("Mac")==-1||NS){
+	str='<table cellpadding=2 cellspacing=1 width="98%"><tr>';
+	for(i=0;i<6;i++)str+='<td nowrap align=center width="16%" id="bt'+(i+1)+'"></td>\n';
+	str+='</tr></table>\n';
+	document.writeln(str);
+}
+//--></script>
+</div>
+</body>
+</html>

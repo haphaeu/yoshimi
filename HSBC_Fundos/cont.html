@@ -1,0 +1,130 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><script language="javascript">
+/*
+DIREITOS AUTORAIS. HSBC HOLDINGS PLC 2003. TODOS OS DIREITOS RESERVADOS
+Este software é destinado apenas aos fins para os quais foi fornecido.
+Nenhuma parte do mesmo pode ser reproduzida, desmembrada, transmitida,
+armazenada em sistema recuperável, nem traduzida em qualquer outra linguagem
+humana ou de informática, de nenhuma forma ou para qualquer outra finalidade
+além daquela para o qual foi dada autorização prévia pelo HSBC Holdings plc.
+*/
+</script><script language="javascript">
+var _CLOADED=false;
+</script><title>HSBC Bank Brasil - Banco Múltiplo | Simulador de Investimentos</title><meta content="no-cache" http-equiv="pragma"><meta content="0" http-equiv="Expires"><link media="print" rel="stylesheet" href="/ITE/common/styles/default_print.css" type="text/css"><link media="screen" type="text/css" href="/ITE/profile/generic/styles/default.css" rel="stylesheet">
+        <link media="screen" type="text/css" href="/ITE/common/styles/default_quickwins.css" rel="stylesheet"><script src="/ITE/common/scripts/infra.js" type="text/javascript"></script>
+<script type="text/javascript">
+var METHOD='GET';
+
+//Para retirar a barra lateral das paginas das aplicações.
+function retirarBarraLateralAplicacoes(){
+
+	try{
+	//sempre q coluna direita existir, é porque é I.B. 2.0
+	var colunaDireita = parent.document.getElementById("colunaDireita");
+	if (colunaDireita != null){
+		var tamanhoMin = 350;
+		var tamanhoMax = 25000;
+		var frameCentral = parent.document.getElementById("central");
+		frameCentral.scrolling='no';
+		if  (navigator.appName=="Netscape"){	
+		      //parent.document.getElementById("central").height = 0;
+		      frameCentral.style.height = (parent.frames[1].document.body.offsetHeight+15)+"px";
+
+		      if ( parseInt((frameCentral.style.height).replace('px','')) < tamanhoMin ){            
+	 			frameCentral.style.height = tamanhoMin+'px';
+		      }else{
+			   if ( parseInt((frameCentral.style.height).replace('px','')) > tamanhoMax ){            
+                		   frameCentral.scrolling= 'yes';
+		           }
+    		      }
+ 		}else{
+		      frameCentral.height = document.body.scrollHeight + 15;
+
+		      if ( frameCentral.height < tamanhoMin){            
+	 			frameCentral.height = tamanhoMin;
+		      }
+	        } 	
+	}
+	}catch(err){}
+
+}
+
+
+
+function getProfileID(){return "0";}
+
+function getCanalID(){return "0"}
+function getProfilePath(){return "/ITE/profile/generic"}
+function hasToken(){return false;}
+function getTokenSize(){return 6;}
+</script><script src="/ITE/common/scripts/calendar.js" language="javascript"></script><script src="/ITE/common/scripts/validate.js" language="javascript"></script><script src="/ITE/common/scripts/calendar.js" language="javascript"></script><script src="/ITE/common/scripts/date.js" language="javascript"></script><script src="/ITE/common/scripts/ver_camp.js" language="javascript"></script><script language="javascript">
+
+function formSubmit() 
+{ 
+  var f=document.cotas;
+	var Hoje = new DateObj('19/09/2012'); 
+  var DataInicial=new DateObj(f.DtInicial.value);
+	var DataFinal=new DateObj(f.DtFinal.value);
+
+	// Limitador do intervalo de 6 meses entre as datas	
+	var DataI6M = new Date(DataInicial.month + "/" + DataInicial.day + "/" + DataInicial.year); 
+	var DataF6M = new Date(DataFinal.month + "/" + DataFinal.day + "/" + DataFinal.year);
+	diff6M = DataF6M.getTime( ) - DataI6M.getTime( );
+  diff6M = Math.floor(diff6M / (1000 * 60 * 60 * 24));       
+ 
+  // Limitador do intervalo de mo máximo 2 anos da data atual	
+	var DataI2A = new Date(DataInicial.month + "/" + DataInicial.day + "/" + DataInicial.year); 
+	var DataF2A = new Date(Hoje.month + "/" + Hoje.day + "/" + Hoje.year);
+	diff2A = DataF2A.getTime( ) - DataI2A.getTime( );
+  diff2A = Math.floor(diff2A / (1000 * 60 * 60 * 24));       
+ 
+  if (!checkCamposObrig(f,["cmbfundos",
+						        "DtInicial",
+						        "DtFinal"],
+						        ["Fundos de Investimento",
+						        "Data Inicial",
+						        "Data Final"])){
+		return false;
+	}
+	if(DataInicial.biggerThan(Hoje)){
+		alert("Data inicial deve ser menor ou igual a data atual."); 
+		f.DtInicial.focus();
+		return false;
+	}
+	if(DataInicial.biggerThan(DataFinal)){
+		alert("Data inicial deve ser menor ou igual a data final."); 
+		f.DtInicial.focus();
+		return false;
+	}
+	if(diff2A > 731){
+		alert("Data inicial deve estar no intervalo dos últimos 24 meses.");
+		f.DtInicial.focus();
+		return false;
+	}
+	if(DataFinal.biggerThan(Hoje)){
+		alert("Data final deve ser menor ou igual a data atual."); 
+		f.DtFinal.focus();
+		return false;
+	}
+	if(diff6M > 180){
+		alert("O intervalo entre as datas não pode ser maior que 6 meses.");
+		f.DtFinal.focus();
+		return false;
+	}
+
+	parent.buttons.clear();
+  	f.descricao.value= f.cmbfundos.options[f.cmbfundos.selectedIndex].text;
+	f.action = "SrvSimulador?ServletState=30";
+	f.submit();
+} 
+function initialize()
+{
+  parent.buttons.create([[1,"Continuar","parent.central.formSubmit()"],
+  				     [6,"Encerrar","parent.central.logout()"]]);
+}
+
+</script><script type="text/javascript">var arrayDescr = [];</script><script type="text/javascript">function verifyValidationError(){}</script></head><body marginwidth="0" marginheight="0" topmargin="0" leftmargin="0" bgcolor="#FFFFFF" ID="oCC" STYLE="behavior:url('#default#clientCaps')" onload="retirarBarraLateralAplicacoes();if(parent.initCentral)parent.initCentral();_CLOADED=true;initialize();if(parent.buttons&amp;&amp;parent.buttons.myBarra)parent.buttons.myBarra.clicked=false;if(typeof(_testKFocusR)=='function')_testKFocusR();" onbeforeunload="if(!isAnchor() &amp;&amp; parent.finCentral) parent.finCentral('beforeunload');" onunload="if(parent.finCentral) parent.finCentral('unload');" onclick="testAnchor();" onfocus="if(typeof(_testKFocus)=='function')_testKFocus();"><style media="screen" type="text/css">
+.PrintYes {display: none;}
+</style><table cellpadding="0" cellspacing="0" width="98%" border="0"><tr><td valign="bottom" height="60" class="Path" width="100%"><img src="/ITE/common/images/logo_hsbc_i.gif" class="PrintYes"><br>&nbsp;&nbsp;  Investimentos - Rentabilidade e Cotações  </td><td rowspan="4" height="110"><img src="/ITE/profile/generic/images/p_header.gif" border="0"></td></tr><tr><td valign="bottom" height="23" class="PageTitle">&nbsp; Histórico de Cotas  </td></tr><tr><td class="LineColor">&nbsp;</td></tr><tr><td class="Comment" height="30">&nbsp;</td></tr></table><form onsubmit="return false;" method="post" action="" name="cotas"><input name="descricao" type="hidden"><table cellpadding="1" cellspacing="0" border="0" width="100%"><tr><td>&nbsp;Preencha os campos abaixo e clique em continuar:</td></tr><tr><tr><td>&nbsp;</td></tr></tr><tr><TD class="inputinfo">&nbsp;&nbsp;Fundos:</TD></tr><tr><TD class="inputinfo">&nbsp; 
+	      <select name="cmbfundos"><option value="">--- Fundos de Investimento ---</option><option value="000000235">F PRIV FGTS PETROBRAS                   </option><option value="000000615">F PRIV FGTS VALE RIO DOCE               </option><option value="000002214">FI RF CRED PRIV LP PERFORMANC MASTER 20 </option><option value="000002213">FIC FI RF CP LP PERFORMANCE PREMIER 20  </option><option value="000000124">HSBC ACOES ACUMULACAO                   </option><option value="000001577">HSBC ACOES AQUAMARINE PRIVATE           </option><option value="000000409">HSBC ACOES DIVIDENDOS                   </option><option value="000000423">HSBC ACOES PETROBRAS                    </option><option value="000001090">HSBC ACOES PIBB                         </option><option value="000000134">HSBC ACOES PRIVATE PLUS                 </option><option value="000000416">HSBC ACOES SETORIAL ATIVO               </option><option value="000000614">HSBC ACOES VALE DO RIO DOCE             </option><option value="000000620">HSBC ACOES VALOR                        </option><option value="000000447">HSBC CAMBIAL DOLAR                      </option><option value="000001419">HSBC DI CLASSIC                         </option><option value="000000214">HSBC DI CP EXECUTIVO                    </option><option value="000000522">HSBC DI CP PRIVATE                      </option><option value="000000887">HSBC DI EXTRA                           </option><option value="000000228">HSBC DI GRUPOS                          </option><option value="000000247">HSBC DI PLUS PREMIER                    </option><option value="000000034">HSBC DI POUPMAIS                        </option><option value="000000243">HSBC DI PREMIER                         </option><option value="000000601">HSBC DI SOLIDARIEDADE                   </option><option value="000000155">HSBC DI SPECIAL                         </option><option value="000000040">HSBC DI TITULOS PUBLICOS                </option><option value="000000411">HSBC FI ACOES  IBOVESPA TOP             </option><option value="000001593">HSBC FI ACOES KAZAN PRIVATE             </option><option value="000001446">HSBC FI ACOES SMALL CAPS                </option><option value="000000178">HSBC FI DI LP                           </option><option value="000001624">HSBC FI MM LP GOA EQUITY HEDGE          </option><option value="000000566">HSBC FI MULTIM LP XIAN INSTITUCIONAL    </option><option value="000000232">HSBC FI MULTIM PREV EMPRES MODERADO     </option><option value="000000459">HSBC FI MULTIM PREVID FUTURE COMP III   </option><option value="000000477">HSBC FI MULTIM PREVID FUTURE COMPOSTO I </option><option value="000000452">HSBC FI MULTIM PREVID FUTURE COMPOSTO II</option><option value="000000695">HSBC FI MULTIM PREVID MODER - VGBL      </option><option value="000001564">HSBC FI MULTIM PREVID POTENCIAL         </option><option value="000000136">HSBC FI MULTIM PREVIDENCIA AGRESSIVO    </option><option value="000000138">HSBC FI MULTIM PREVIDENCIA MODERADO     </option><option value="000000135">HSBC FI MULTIM PREVIDENCIARIO MODER II  </option><option value="000000696">HSBC FI MULTIMERC PREVID MOD II - VGBL  </option><option value="000002183">HSBC FI MULTIMERCADO SMART OURO         </option><option value="000002302">HSBC FI MULTIMERCADO SMART OURO II      </option><option value="000002138">HSBC FI MULTIMERCADO SMART TARGET 2     </option><option value="000000692">HSBC FI PREVIDENCIARIO AGRESSIVO - VGBL </option><option value="000001563">HSBC FI PREVIDENCIARIO MULTIM VALOR     </option><option value="000002121">HSBC FI RENDA FIXA PREV ATIVO PREMIER   </option><option value="000000520">HSBC FI RENDA FIXA PREVID FUTURE        </option><option value="000001580">HSBC FI RF CP LP PORTFOLIO DPGE         </option><option value="000001600">HSBC FI RF CP LP PORTFOLIO DPGE MASTER  </option><option value="000001915">HSBC FI RF CP LP PORTFOLIO DPGE MASTER 2</option><option value="000001922">HSBC FI RF CP LP PORTFOLIO DPGE MASTER 3</option><option value="000001920">HSBC FI RF CP PERFORMANCE INSTITUCIONAL </option><option value="000000187">HSBC FI RF CREDITO PRIVADO ATIVO        </option><option value="000001786">HSBC FI RF LP PRECOS                    </option><option value="000000694">HSBC FI RF PREV CONSERVADOR - VGBL      </option><option value="000000231">HSBC FI RF PREVID EMPRES CONSERVADOR    </option><option value="000000137">HSBC FI RF PREVIDENCIARIO CONSERV       </option><option value="000000415">HSBC FIA INSTITUCIONAL                  </option><option value="000002153">HSBC FIA PETROBRAS 2                    </option><option value="000000406">HSBC FIC ACOES                          </option><option value="000001447">HSBC FIC ACOES SMALL CAPS               </option><option value="000001112">HSBC FIC ACOES SUSTENTABILIDADE         </option><option value="000001095">HSBC FIC CRED PRIV LP MULTIM MULTIRECEBI</option><option value="000000629">HSBC FIC CURTO PRAZO                    </option><option value="000000630">HSBC FIC CURTO PRAZO II                 </option><option value="000001576">HSBC FIC DE ACOES AQUAMARINE 5          </option><option value="000002296">HSBC FIC DI CRED PRIV LP NOVO EXECUTIVO </option><option value="000002041">HSBC FIC FI ACOES IBOV REGIME PREVID    </option><option value="000000168">HSBC FIC FI CURTO PRAZO OVER            </option><option value="000001912">HSBC FIC FI MM LP AQUAMARINE ARBITRAGEM </option><option value="000001075">HSBC FIC FI MULTIM MULTIFUNDOS          </option><option value="000001767">HSBC FIC FI MULTIMERCADO PREV ARROJADO  </option><option value="000001761">HSBC FIC FI MULTIMERCADO PREV DINAMICO  </option><option value="000001828">HSBC FIC FI RF PREVI FUTURE GOLD        </option><option value="000002228">HSBC FIC FIA ASIA EX-JAPAN INV EXTERIOR </option><option value="000001550">HSBC FIC LONGO PRAZO GOA LONG AND SHORT </option><option value="000002094">HSBC FIC MM PREV LINHA DO TEMPO 2050 II </option><option value="000002087">HSBC FIC MULT PREV LINHA TEMPO 2030 I   </option><option value="000002091">HSBC FIC MULT PREV LINHA TEMPO 2030 II  </option><option value="000002088">HSBC FIC MULT PREV LINHA TEMPO 2040 I   </option><option value="000002092">HSBC FIC MULT PREV LINHA TEMPO 2040 II  </option><option value="000002090">HSBC FIC MULT PREV LINHA TEMPO 2050 I   </option><option value="000001762">HSBC FIC MULTIMERCADO PREV ARROJADO II  </option><option value="000001765">HSBC FIC MULTIMERCADO PREV TOP MAIS     </option><option value="000001766">HSBC FIC MULTIMERCADO PREV TOP MAIS II  </option><option value="000001774">HSBC FIC MULTMERC PREV DINAMICO II      </option><option value="000000252">HSBC FIC REF DI LONGO PRAZO EMPRESA     </option><option value="000000253">HSBC FIC REF DI LONGO PRAZO EMPRESA PLUS</option><option value="000002083">HSBC FIC REF DI LP ADVANCE              </option><option value="000002095">HSBC FIC RENDA FIXA PREV ATIVO PREMIER  </option><option value="000001769">HSBC FIC RENDA FIXA PREV CONSERVADOR II </option><option value="000002212">HSBC FIC RF CRED PRIV LP PERFORMANCE 20 </option><option value="000002098">HSBC FIC RF PREVIDENCIARIO ATIVO PLUS   </option><option value="000000937">HSBC FUNDO DE INVESTIMENTO CURTO PRAZO  </option><option value="000000531">HSBC MULTIMERCADO AQUAMARINE            </option><option value="000001105">HSBC MULTIMERCADO CP STAR               </option><option value="000001088">HSBC MULTIMERCADO ESTRATEGIA AGRESSIVO  </option><option value="000001113">HSBC MULTIMERCADO ESTRATEGIA CONSERVADOR</option><option value="000001087">HSBC MULTIMERCADO ESTRATEGIA MODERADO   </option><option value="000002237">HSBC PREVIDENCIARIO M3D MULT FICFI      </option><option value="000000978">HSBC RF BASIC                           </option><option value="000001006">HSBC RF CP PERFORMANCE                  </option><option value="000001057">HSBC RF CP PERFORMANCE PREMIER          </option><option value="000000401">HSBC RF CP PERFORMANCE PRIVATE          </option><option value="000000524">HSBC RF CP TIPO                         </option><option value="000001151">HSBC RF PAB                             </option><option value="000000206">HSBC RF PLUS                            </option><option value="000001089">HSBC RF PRE FIXADO MAX                  </option><option value="000000242">HSBC RF PREMIER                         </option><option value="000001833">HSBC RF TRIPLA VANTAGEM                 </option></select></TD></tr><tr><td class="inputinfo">&nbsp;</td></tr></table><TABLE width="100%" cellSpacing="1" cellPadding="4" border="0"><TR><TD width="50%" class="inputinfo">Data inicial:<br>(ddmmaaaa)</TD><TD width="50%" class="inputinfo">Data final:<br>(ddmmaaaa)</TD></TR><TR><TD width="111" class="inputinfo"><INPUT onBlur="formatCamp(this, 'date')" onKeyPress="return(validaConteudo(event, this,        'date'))" onKeyUp="saltaCampo(event, this, 'date',8)" onFocus="removeCaracs(this, 'date')" size="10" value="" name="DtInicial" type="text">&nbsp;<a onclick="openCalendar(document.forms[0].DtInicial);return false;" href="javascript:void(0);"><img border="0" height="15" width="16" alt="Calendário" src="/ITE/common/images/calendar/icon.gif"></a></TD><TD width="111" class="inputinfo"><INPUT onBlur="formatCamp(this, 'date')" onKeyPress="return(validaConteudo(event, this,'date'))" onKeyUp="saltaCampo(event, this, 'date',8)" onFocus="removeCaracs(this, 'date')" size="10" value="" name="DtFinal" type="text">&nbsp;<a onclick="openCalendar(document.forms[0].DtFinal);return false;" href="javascript:void(0);"><img border="0" height="15" width="16" alt="Calendário" src="/ITE/common/images/calendar/icon.gif"></a></TD></TR><tr><td><br></td></tr><tr><td colspan="2" class="Information">
+			Para consultar o histórico de cotas, selecione o Fundo de Investimento e um período de até seis meses (limitado nos últimos 24 meses).
+		</td></tr></TABLE></form></body></html>

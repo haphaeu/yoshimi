@@ -1,0 +1,45 @@
+HOW TO COMPILE A PYTHON CODE (.PY) INTO AN EXECUTABLE FILE (.EXE)
+=================================================================
+
+Requirements:
+
+These softwares must be installed in the machine in which the code will 
+be compiled:
+
+- Active Python (W:\Software\Python)
+- py2exe (W:\Software\Python\py2exe)
+
+How to compile:
+
+Compilation of the python code is done with the py2exe library.
+Detailed instructions of how to use it is found at
+www.py2exe.org/index.cgi/Tutorial
+
+Basically you need:
+
+1-Edit the file setup.py and change *only* the name of the file to be 
+compiled
+2-In the shell, call >>python setup.py py2exe
+
+You'll see lots of output and in the end the code should be compiled in the 
+folder "dist"
+
+Important: To run the compiled program, you'll need 3 files:
+1-The compiled .EXE file
+2-PYTHON26.dll
+3-library.zip
+
+Copy all these 3 files to *the same folder* and add this folder to the system
+path.
+For example, the files can be copied to Z:\RADMAP
+
+Notes:
+-If you need to compile more than one python code in the same folder, just add
+ them to the same setup.exe
+ 
+-The files PYTHON26.DLL and LIBRARY.ZIP are likely to be the same for 
+compilations of different codes, so only one of those files should be ok in the
+RADMAP folder.*But* no extensive testing is done in this regarding.
+
+
+RR - June 2010

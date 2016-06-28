@@ -1,0 +1,22 @@
+Echo of the control DAT file:
+=============================
+
+*AnalysisType S
+*Parameters
+   0.1   0.025   100
+   0.01  0.035   100
+   0.2   0.01    100
+*UserName rossir
+
+Summary of the corrected cases:
+===============================
+
+Case ID, Time-step, Tolerance, MinTorque
+
+015_B_QF10_01CS   0.01   0.035   100.0
+
+
+Cases still dead:
+=================
+
+014_B_QF15_01CS

@@ -1,0 +1,54 @@
+CheckOUT - under development
+
+this program searches and reports the crashed flexcom cases.
+
+There are three variants:
+
+1- CheckOUT
+2- CheckOUTsimple
+3- CheckOUTfull
+
+1- CheckOUT
+===========
+Reads a single folder and outputs all crashed cases verbosely, i.e,
+results are presented per analysis type (T, S and D), the number of
+crashed cases and the name of each crashed case. Results are reported
+on screen and in a results file.
+
+2- CheckOUTsimple
+=================
+Reads a single folder and creates a simpler output of the crashed
+cases, i.e, only report the file names of the crashed cases. 
+More usefull for a batch run. Results are reported on screen and 
+in a results file.
+
+3- CheckOUTfull
+===============
+Reads the full subfolder structure from which the program is run from.
+Reports the names of each folder checked and if crashed cases are found,
+their names are reported below the folder name. No output file is created,
+the results are only shown on screen
+
+
+How to use it:
+==============
+
+In the command prompt, just type the program name in the directory you
+want to check:
+
+CheckOUT
+or
+CheckOUTsimple
+or
+CHECKOUTfull
+
+Note that the 'CheckOUTfull' might take several minutes to run of the 
+subfolder structure is big.
+
+
+===
+Need any help?
+
+Rafael Rossi
+RossiR@2hoffshore.com.br
++55 (21) 2510-7317

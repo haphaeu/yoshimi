@@ -1,0 +1,10 @@
+Iter: 0 - Target: 10.00, Current: 0.99, Delta H: 1.44, Horizontal Distance: 44.905
+Iter: 1 - Target: 10.00, Current: 5.47, Delta H: -2.92, Horizontal Distance: 46.347
+Iter: 2 - Target: 10.00, Current: -2.64, Delta H: -2.92, Horizontal Distance: 43.431
+Iter: 3 - Target: 10.00, Current: -2.64, Delta H: -2.92, Horizontal Distance: 40.516
+Iter: 4 - Target: 10.00, Current: -2.64, Delta H: -2.92, Horizontal Distance: 37.600
+Iter: 5 - Target: 10.00, Current: -2.64, Delta H: -2.92, Horizontal Distance: 34.685
+Iter: 6 - Target: 10.00, Current: -2.64, Delta H: -2.92, Horizontal Distance: 31.770
+Iter: 7 - Target: 10.00, Current: -2.64, Delta H: -2.92, Horizontal Distance: 28.854
+Iter: 8 - Target: 10.00, Current: -2.64, Delta H: -2.92, Horizontal Distance: 25.939
+Iter: 9 - Target: 10.00, Current: -2.64, Delta H: -2.92, Horizontal Distance: 23.024

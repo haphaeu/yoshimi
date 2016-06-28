@@ -1,0 +1,4 @@
+Iter: 0 - Target: 17.00, Current: 16.79, Delta H: 6.03, Horizontal Distance: 2317.000
+Iter: 1 - Target: 17.00, Current: 17.03, Delta H: 0.75, Horizontal Distance: 2323.031
+Iter: 2 - Target: 17.00, Current: 17.00, Delta H: 0.75, Horizontal Distance: 2322.277
+Top angle tolerance reached.

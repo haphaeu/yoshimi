@@ -1,0 +1,53 @@
+2HFIXKEYS - under development
+
+this program searches the crashed static and dynamic cases and re-run flexcom 
+for those using the user input parameters.
+
+How to use it:
+==============
+
+copy the files MortosFeridos.py and controla.dat to the analysis folder with the crashed cases.
+edit controla.dat according to the following commands:
+
+mandatory commands:
+
+   *AnalysisType type 
+
+where type can be S, Q or D
+   
+   *Parameters
+       ts1   tol1   torque1
+       ts2   tol2   torque2
+       
+where 
+ ts is time-step, tol is tolerance and torque is minimum torque value
+ put as many lines as you wish with a set of three values
+ 
+optional:
+   *UserName - username (as per e-mail, without @...), sends you a message when program finishes.
+
+after that, call in the command prompt:
+
+        python MortosFeridos.py
+
+How does it work?
+=================
+
+The program firstly searches though all the flexcom OUT files in the 
+directory, according to the analysis type defined in the command 
+*AnalysisType, and builds a list of the crashed cases. 
+
+Then, flexcom is rerun using the parameters listed in the command 
+*Parameter until the case run successfully.
+
+A file called MortosFeridosLog.txt is created with an echo of the DAT 
+file, the parameters for which each case run and finally, the cases 
+still crashed.
+
+
+===
+Need any help?
+
+Rafael Rossi
+RossiR@2hoffshore.com.br
++55 (21) 2510-7317

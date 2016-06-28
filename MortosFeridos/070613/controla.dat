@@ -1,0 +1,5 @@
+*AnalysisType S
+*Time-steps   0.5 0.1
+*Tolerances   0.0001 0.025
+*MinTorque    10000 100
+*UserName public
