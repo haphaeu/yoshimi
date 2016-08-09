@@ -14,8 +14,9 @@ import numpy as np
 
 
 def myfun(X):
-    x, y = X[0], X[1]
-    return (x+np.pi)**2+150*np.sin(3*(x+np.pi))+(y+np.pi)**2
+    x, y = X[0]+np.pi, X[1]+2*np.pi
+    ret = x**2+150*np.abs(np.sin(3*x))+y**2
+    return ret 
 
 
 def surf(func):
@@ -33,13 +34,15 @@ def surf(func):
     fig.colorbar(surf, shrink=0.5, aspect=5)
     plt.show()
 
-surf(myfun)
+
+#surf(myfun)
 
 #ret = opt.differential_evolution(myfun, ((-10, 10), (-5, 5)))
 #print('Minimum of {0:.2f} found at ({1:.3f}, {2:.3f})'.format(
 #      ret['fun'], ret['x'][0], ret['x'][1]))
 
-ret = opt.basinhopping(myfun, (-9, 4), niter=1000)
-print('Minimum of {0:.2f} found at ({1:.3f}, {2:.3f}) - function calls {3}'.format(
-      ret['fun'], ret['x'][0], ret['x'][1], ret['nfev']))
+for i in range(10):
+    ret = opt.basinhopping(myfun, (-900, 467), niter=100, disp=False)
+    print('Minimum of {0:.2f} found at ({1:.3f}, {2:.3f}) - function calls {3}'.format(
+          ret['fun'], ret['x'][0], ret['x'][1], ret['nfev']))
 
