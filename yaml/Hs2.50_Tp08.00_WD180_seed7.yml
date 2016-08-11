@@ -1,0 +1,11 @@
+BaseFile: ..\frame_spool_covers.dat
+Environment:
+  WaveDirection: 180
+  WaveHs: 2.50
+  WaveGamma: 1.000
+  WaveTp: 8.00
+  WaveSeed: 1782066502
+General:
+  ImplicitUseVariableTimeStep: 'Yes'
+  ImplicitVariableMaxTimeStep: 0.0015
+  TargetLogSampleInterval: 0.0015
