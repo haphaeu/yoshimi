@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
 """
+
+Pipe Properties
+===============
+
+Calculate cross sectional properties and weights in air and in water for homogeneous pipes.
+
+This is an upgrade to Python/PyQt4 of the old app written back in October 2010 using
+VB/MS Visual Studio.
+
 Created on Wed Aug 10 18:29:14 2016
 
 @author: raf
@@ -9,7 +18,7 @@ import sys
 from PyQt4 import QtCore, QtGui, uic
 from numpy import pi
 
-qtCreatorFile = 'untitled.ui'  # Enter file here.
+qtCreatorFile = 'pipe_properties.ui'  # Enter file here.
 
 Ui_MainWindow, QtBaseClass = uic.loadUiType(qtCreatorFile)
 
@@ -45,6 +54,27 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
         self.lineLinerDensity.setText('0.0')
         self.lineContentsDensity.setText('0.0')
 
+        # note that this read only style is also hard coded inside self.cell()
+        self.readOnlyBackgroundStyle = 'background-color: rgb(216, 216, 216);'
+        self.defaultBackgroundStyle = 'background-color: rgb(255, 255, 255);'
+
+        self.lineWT.setReadOnly(True)
+        self.lineWT.setStyleSheet(self.readOnlyBackgroundStyle)
+
+        self.lineAxialStiffness.setReadOnly(True)
+        self.lineBendingStiffness.setReadOnly(True)
+        self.lineTorsionalStiffness.setReadOnly(True)
+        self.lineWeightDryEmpty.setReadOnly(True)
+        self.lineWeightDryFilled.setReadOnly(True)
+        self.lineWeightWetFilled.setReadOnly(True)
+
+        self.lineAxialStiffness.setStyleSheet(self.readOnlyBackgroundStyle)
+        self.lineBendingStiffness.setStyleSheet(self.readOnlyBackgroundStyle)
+        self.lineTorsionalStiffness.setStyleSheet(self.readOnlyBackgroundStyle)
+        self.lineWeightDryEmpty.setStyleSheet(self.readOnlyBackgroundStyle)
+        self.lineWeightDryFilled.setStyleSheet(self.readOnlyBackgroundStyle)
+        self.lineWeightWetFilled.setStyleSheet(self.readOnlyBackgroundStyle)
+
         self.comboMaterialChange(0)
 
         self.lineOD.textChanged.connect(self.calc_simple)
@@ -65,6 +95,7 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
 
         self.buttonAddCol.clicked.connect(self.addCol)
         self.buttonDelCol.clicked.connect(self.delCol)
+        self.buttonCopyCol.clicked.connect(self.copyCol)
 
         # set up the table - nt being used at the moment
 
@@ -84,18 +115,16 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
         for i, h in enumerate(headers):
             self.table.setVerticalHeaderItem(i, QtGui.QTableWidgetItem(h))
 
-        self.table.setColumnCount(2)
-        headers = ('Pipe 1', 'Pipe 2')
+        top_headers = ('Pipe', )
+        self.table.setColumnCount(len(top_headers))
 
-        for i, h in enumerate(headers):
+        for i, h in enumerate(top_headers):
             self.table.setHorizontalHeaderItem(i, QtGui.QTableWidgetItem(h))
 
         self.update_WT = True
-        self.locked_rows = {}
         self.createtable()
-
+        self.do_calcs(0, 0)
         self.table.cellChanged.connect(self.do_calcs)
-
         self.clip = QtGui.QApplication.clipboard()
 
         # self.table = QtGui.QTableWidget()
@@ -104,16 +133,22 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
     def comboMaterialChange(self, idx):
         if idx == len(self.materials)-1:
             # custom
-            self.lineMaterialDensity.setEnabled(True)
-            self.lineMaterialModulus.setEnabled(True)
-            self.lineMaterialPoisson.setEnabled(True)
+            self.lineMaterialDensity.setReadOnly(False)
+            self.lineMaterialModulus.setReadOnly(False)
+            self.lineMaterialPoisson.setReadOnly(False)
+            self.lineMaterialDensity.setStyleSheet(self.defaultBackgroundStyle)
+            self.lineMaterialModulus.setStyleSheet(self.defaultBackgroundStyle)
+            self.lineMaterialPoisson.setStyleSheet(self.defaultBackgroundStyle)
             # self.lineMaterialDensity.setText('')
             # self.lineMaterialModulus.setText('')
         else:
             # material from database
-            self.lineMaterialDensity.setEnabled(False)
-            self.lineMaterialModulus.setEnabled(False)
-            self.lineMaterialPoisson.setEnabled(False)
+            self.lineMaterialDensity.setReadOnly(True)
+            self.lineMaterialModulus.setReadOnly(True)
+            self.lineMaterialPoisson.setReadOnly(True)
+            self.lineMaterialDensity.setStyleSheet(self.readOnlyBackgroundStyle)
+            self.lineMaterialModulus.setStyleSheet(self.readOnlyBackgroundStyle)
+            self.lineMaterialPoisson.setStyleSheet(self.readOnlyBackgroundStyle)
             self.lineMaterialDensity.setText(str(self.materials[idx][1]))
             self.lineMaterialModulus.setText(str(self.materials[idx][2]))
             self.lineMaterialPoisson.setText(str(self.materials[idx][3]))
@@ -125,19 +160,28 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
         """
 
         if self.radioOD.isChecked():
-            self.lineOD.setEnabled(False)
-            self.lineID.setEnabled(True)
-            self.lineWT.setEnabled(True)
+            self.lineOD.setReadOnly(True)
+            self.lineID.setReadOnly(False)
+            self.lineWT.setReadOnly(False)
+            self.lineOD.setStyleSheet(self.readOnlyBackgroundStyle)
+            self.lineID.setStyleSheet(self.defaultBackgroundStyle)
+            self.lineWT.setStyleSheet(self.defaultBackgroundStyle)
             return True
         elif self.radioID.isChecked():
-            self.lineOD.setEnabled(True)
-            self.lineID.setEnabled(False)
-            self.lineWT.setEnabled(True)
+            self.lineOD.setReadOnly(False)
+            self.lineID.setReadOnly(True)
+            self.lineWT.setReadOnly(False)
+            self.lineOD.setStyleSheet(self.defaultBackgroundStyle)
+            self.lineID.setStyleSheet(self.readOnlyBackgroundStyle)
+            self.lineWT.setStyleSheet(self.defaultBackgroundStyle)
             return True
         elif self.radioWT.isChecked():
-            self.lineOD.setEnabled(True)
-            self.lineID.setEnabled(True)
-            self.lineWT.setEnabled(False)
+            self.lineOD.setReadOnly(False)
+            self.lineID.setReadOnly(False)
+            self.lineWT.setReadOnly(True)
+            self.lineOD.setStyleSheet(self.defaultBackgroundStyle)
+            self.lineID.setStyleSheet(self.defaultBackgroundStyle)
+            self.lineWT.setStyleSheet(self.readOnlyBackgroundStyle)
             return True
         else:
             return False
@@ -149,17 +193,17 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
 
         try:
             # Reads all inputs and checks for errors
-            OD = float(self.lineOD.text())                               # mm
-            ID = float(self.lineID.text())                               # mm
-            WT = float(self.lineWT.text())                               # mm
-            E = float(self.lineMaterialModulus.text())                   # GPa, modulus
-            rho = float(self.lineMaterialDensity.text())                 # kg/m3, material density
-            v = float(self.lineMaterialPoisson.text())                   # -, Poisson ratio
-            contents_density = float(self.lineContentsDensity.text())    # kg/m3, contents density
-            coating_thickness = float(self.lineCoatingThickness.text())  # mm
-            coating_density = float(self.lineCoatingDensity.text())      # kg/m3
-            liner_thickness = float(self.lineLinerThickness.text())      # mm
-            liner_density = float(self.lineLinerDensity.text())          # kg/m3
+            OD = float(dot(self.lineOD.text()))                               # mm
+            ID = float(dot(self.lineID.text()))                               # mm
+            WT = float(dot(self.lineWT.text()))                               # mm
+            E = float(dot(self.lineMaterialModulus.text()))                   # GPa, modulus
+            rho = float(dot(self.lineMaterialDensity.text()))                 # kg/m3, density
+            v = float(dot(self.lineMaterialPoisson.text()))                   # -, Poisson ratio
+            contents_density = float(dot(self.lineContentsDensity.text()))    # kg/m3
+            coating_thickness = float(dot(self.lineCoatingThickness.text()))  # mm
+            coating_density = float(dot(self.lineCoatingDensity.text()))      # kg/m3
+            liner_thickness = float(dot(self.lineLinerThickness.text()))      # mm
+            liner_density = float(dot(self.lineLinerDensity.text()))          # kg/m3
         except:
             self.lineAxialStiffness.setText('nan')
             self.lineBendingStiffness.setText('nan')
@@ -226,104 +270,28 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
     def delCol(self):
         self.table.setColumnCount(self.table.columnCount()-1)
 
-    def do_calcs(self, row, col):
-
-        if row == 2:
-            # change WT - update ID
-            try:
-                WT = float(self.table.item(2, col).text())
-                OD = float(self.table.item(0, col).text())
-                ID = OD - 2*WT
-                self.update_WT = False
-                self.table.setItem(1, col, self.cell('%.3f' % ID))
-                self.update_WT = True
-                return True
-            except:
-                self.table.setItem(2, col, self.cell('nan'))
-                self.table.setItem(11, col, self.cell('nan', True))
-                self.table.setItem(12, col, self.cell('nan', True))
-                self.table.setItem(13, col, self.cell('nan', True))
-                self.table.setItem(14, col, self.cell('nan', True))
-                self.table.setItem(15, col, self.cell('nan', True))
-                self.table.setItem(16, col, self.cell('nan', True))
-                return False
-
-        if row in {0, 1, 3, 4, 5, 6, 7, 8, 9, 10}:
-            try:
-                OD = float(self.table.item(0, col).text())
-                ID = float(self.table.item(1, col).text())
-            except:
-                self.table.setItem(2, col, self.cell('nan'))
-                self.table.setItem(11, col, self.cell('nan', True))
-                self.table.setItem(12, col, self.cell('nan', True))
-                self.table.setItem(13, col, self.cell('nan', True))
-                self.table.setItem(14, col, self.cell('nan', True))
-                self.table.setItem(15, col, self.cell('nan', True))
-                self.table.setItem(16, col, self.cell('nan', True))
-                return False
-
-            WT = (OD-ID)/2
-            if self.update_WT:
-                self.table.setItem(2, col, self.cell('%.3f' % WT))
-
-            h = 'Pipe %.0fin x %.1fmm' % (OD/25.4, WT)
-            self.table.setHorizontalHeaderItem(col, QtGui.QTableWidgetItem(h))
-
-            try:
-                rho = float(self.table.item(3, col).text())
-                E = float(self.table.item(4, col).text())
-                v = float(self.table.item(5, col).text())
-            except:
-                self.table.setItem(11, col, self.cell('nan', True))
-                self.table.setItem(12, col, self.cell('nan', True))
-                self.table.setItem(13, col, self.cell('nan', True))
-                self.table.setItem(14, col, self.cell('nan', True))
-                self.table.setItem(15, col, self.cell('nan', True))
-                self.table.setItem(16, col, self.cell('nan', True))
-                return False
-
-            EA, EI, GJ = self.cross_section(OD, ID, E, v)
-
-            self.table.setItem(11, col, self.cell('%.1f' % EA, True))
-            self.table.setItem(12, col, self.cell('%.1f' % EI, True))
-            self.table.setItem(13, col, self.cell('%.1f' % GJ, True))
-
-            try:
-                contents_density = float(self.table.item(6, col).text())    # kg/m3
-                coating_thickness = float(self.table.item(7, col).text())   # mm
-                coating_density = float(self.table.item(8, col).text())     # kg/m3
-                liner_thickness = float(self.table.item(9, col).text())     # mm
-                liner_density = float(self.table.item(10, col).text())      # kg/m3
-            except:
-                self.table.setItem(14, col, self.cell('nan', True))
-                self.table.setItem(15, col, self.cell('nan', True))
-                self.table.setItem(16, col, self.cell('nan', True))
-                return False
-
-            dry_weight_empty, dry_weight_filled, wet_weight_filled = self.weights(
-                        OD, ID, rho, contents_density, coating_thickness, coating_density,
-                        liner_thickness, liner_density)
-            self.table.setItem(14, col, self.cell('%.3f' % dry_weight_empty, True))
-            self.table.setItem(15, col, self.cell('%.3f' % dry_weight_filled, True))
-            self.table.setItem(16, col, self.cell('%.3f' % wet_weight_filled, True))
-
-            return True
+    def copyCol(self):
+        num_cols = self.table.columnCount()
+        self.table.setColumnCount(num_cols+1)
+        for i in range(self.table.rowCount()):
+            self.table.setItem(i, num_cols, self.table.item(i, num_cols-1).clone())
 
     def cell(self, var='', locked=False):
         item = QtGui.QTableWidgetItem()
         if locked:
             item.setFlags(QtCore.Qt.ItemIsEnabled)
+            item.setBackground(QtGui.QColor(232, 232, 232))
         item.setText(var)
         return item
 
     def createtable(self):
         rows = self.table.rowCount()
         columns = self.table.columnCount()
+        vals = (508, 457.2, 25.4, 7850, 210, 0.293, 1000)
         locked_rows = {11, 12, 13, 14, 15, 16}
         for i in range(rows):
             for j in range(columns):
-                item = self.cell('0.0')
-                # execute the line below to every item you need locked
+                item = self.cell(str(vals[i]) if i < len(vals) else '0.0')
                 if i in locked_rows:
                     item.setFlags(QtCore.Qt.ItemIsEnabled)
                 self.table.setItem(i, j, item)
@@ -343,6 +311,95 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
                             s += "\t"
                     s = s[:-1] + "\n"  # eliminate last '\t'
                 self.clip.setText(s)
+
+    def do_calcs(self, row, col):
+
+        if row == 2:
+            # change WT - update ID
+            try:
+                WT = float(dot(self.table.item(2, col).text()))
+                OD = float(dot(self.table.item(0, col).text()))
+                ID = OD - 2*WT
+                self.update_WT = False
+                self.table.setItem(1, col, self.cell('%.3f' % ID))
+                self.update_WT = True
+                return True
+            except:
+                self.table.setItem(2, col, self.cell('nan'))
+                self.table.setItem(11, col, self.cell('nan', True))
+                self.table.setItem(12, col, self.cell('nan', True))
+                self.table.setItem(13, col, self.cell('nan', True))
+                self.table.setItem(14, col, self.cell('nan', True))
+                self.table.setItem(15, col, self.cell('nan', True))
+                self.table.setItem(16, col, self.cell('nan', True))
+                return False
+
+        if row in {0, 1, 3, 4, 5, 6, 7, 8, 9, 10}:
+            try:
+                OD = float(dot(self.table.item(0, col).text()))
+                ID = float(dot(self.table.item(1, col).text()))
+            except:
+                self.table.setItem(2, col, self.cell('nan'))
+                self.table.setItem(11, col, self.cell('nan', True))
+                self.table.setItem(12, col, self.cell('nan', True))
+                self.table.setItem(13, col, self.cell('nan', True))
+                self.table.setItem(14, col, self.cell('nan', True))
+                self.table.setItem(15, col, self.cell('nan', True))
+                self.table.setItem(16, col, self.cell('nan', True))
+                return False
+
+            WT = (OD-ID)/2
+            if self.update_WT:
+                self.table.setItem(2, col, self.cell('%.3f' % WT))
+
+            h = 'Pipe %.0fin x %.1fmm' % (OD/25.4, WT)
+            self.table.setHorizontalHeaderItem(col, QtGui.QTableWidgetItem(h))
+
+            try:
+                rho = float(dot(self.table.item(3, col).text()))
+                E = float(dot(self.table.item(4, col).text()))
+                v = float(dot(self.table.item(5, col).text()))
+            except:
+                self.table.setItem(11, col, self.cell('nan', True))
+                self.table.setItem(12, col, self.cell('nan', True))
+                self.table.setItem(13, col, self.cell('nan', True))
+                self.table.setItem(14, col, self.cell('nan', True))
+                self.table.setItem(15, col, self.cell('nan', True))
+                self.table.setItem(16, col, self.cell('nan', True))
+                return False
+
+            EA, EI, GJ = self.cross_section(OD, ID, E, v)
+
+            self.table.setItem(11, col, self.cell('%.1f' % EA, True))
+            self.table.setItem(12, col, self.cell('%.1f' % EI, True))
+            self.table.setItem(13, col, self.cell('%.1f' % GJ, True))
+
+            try:
+                contents_density = float(dot(self.table.item(6, col).text()))    # kg/m3
+                coating_thickness = float(dot(self.table.item(7, col).text()))   # mm
+                coating_density = float(dot(self.table.item(8, col).text()))     # kg/m3
+                liner_thickness = float(dot(self.table.item(9, col).text()))     # mm
+                liner_density = float(dot(self.table.item(10, col).text()))      # kg/m3
+            except:
+                self.table.setItem(14, col, self.cell('nan', True))
+                self.table.setItem(15, col, self.cell('nan', True))
+                self.table.setItem(16, col, self.cell('nan', True))
+                return False
+
+            dry_weight_empty, dry_weight_filled, wet_weight_filled = self.weights(
+                        OD, ID, rho, contents_density, coating_thickness, coating_density,
+                        liner_thickness, liner_density)
+            self.table.setItem(14, col, self.cell('%.3f' % dry_weight_empty, True))
+            self.table.setItem(15, col, self.cell('%.3f' % dry_weight_filled, True))
+            self.table.setItem(16, col, self.cell('%.3f' % wet_weight_filled, True))
+
+            return True
+
+
+def dot(var):
+        """Replaces comma with dot in a string."""
+        return var.replace(',', '.')
+
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)

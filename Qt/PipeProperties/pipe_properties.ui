@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Pipe Properties</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QComboBox" name="comboMaterial">
@@ -150,7 +150,7 @@
      <item row="2" column="3">
       <widget class="QLineEdit" name="lineWT">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="font">
         <font>
@@ -181,6 +181,26 @@
     </property>
     <property name="text">
      <string>Pipe Properties</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelTitle">
+    <property name="geometry">
+     <rect>
+      <x>900</x>
+      <y>760</y>
+      <width>181</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Consolas</family>
+      <pointsize>10</pointsize>
+      <weight>75</weight>
+     </font>
+    </property>
+    <property name="text">
+     <string>v2.0 - Aug 2016 - by RR</string>
     </property>
    </widget>
    <widget class="QWidget" name="layoutWidget_2">
@@ -362,6 +382,19 @@
     <column/>
     <column/>
     <column/>
+   </widget>
+   <widget class="QPushButton" name="buttonCopyCol">
+    <property name="geometry">
+     <rect>
+      <x>580</x>
+      <y>760</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Copy Col</string>
+    </property>
    </widget>
    <widget class="QPushButton" name="buttonAddCol">
     <property name="geometry">
@@ -737,8 +770,6 @@
    <zorder>labelTitle</zorder>
    <zorder>layoutWidget_2</zorder>
    <zorder>table</zorder>
-   <zorder>buttonAddRow</zorder>
-   <zorder>buttonDelRow</zorder>
    <zorder>buttonAddCol</zorder>
    <zorder>buttonDelCol</zorder>
    <zorder>label_14</zorder>
