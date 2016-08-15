@@ -97,7 +97,9 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
         self.buttonDelCol.clicked.connect(self.delCol)
         self.buttonCopyCol.clicked.connect(self.copyCol)
 
-        # set up the table - nt being used at the moment
+        # set up the table
+        self.table.horizontalHeader().setVisible(True)
+        self.table.verticalHeader().setVisible(True)
 
         headers = ('OD [mm]', 'ID [mm]', 'WT [mm]',
                    'Material Density [kg/m³]', 'Material Modulus [GPa]', 'Poisson Ratio',
