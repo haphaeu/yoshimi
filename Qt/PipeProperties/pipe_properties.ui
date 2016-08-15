@@ -36,7 +36,7 @@
       <x>10</x>
       <y>30</y>
       <width>209</width>
-      <height>77</height>
+      <height>78</height>
      </rect>
     </property>
     <property name="font">
@@ -86,7 +86,7 @@
       </widget>
      </item>
      <item row="1" column="1" colspan="2">
-      <widget class="QRadioButton" name="radioButton_2">
+      <widget class="QRadioButton" name="radioID">
        <property name="font">
         <font>
          <family>Consolas</family>
@@ -122,7 +122,7 @@
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QRadioButton" name="radioButton_3">
+      <widget class="QRadioButton" name="radioWT">
        <property name="font">
         <font>
          <family>Consolas</family>
@@ -189,10 +189,56 @@
       <x>10</x>
       <y>120</y>
       <width>263</width>
-      <height>50</height>
+      <height>105</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout_6">
+    <item row="3" column="1">
+      <widget class="QLineEdit" name="lineContentsDensity">
+       <property name="font">
+        <font>
+         <family>Consolas</family>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_13">
+       <property name="font">
+        <font>
+         <family>Consolas</family>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Contents Density [kg/m³]</string>
+       </property>
+      </widget>
+     </item>
+    <item row="2" column="1">
+      <widget class="QLineEdit" name="lineMaterialPoisson">
+       <property name="font">
+        <font>
+         <family>Consolas</family>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_13">
+       <property name="font">
+        <font>
+         <family>Consolas</family>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Poisson Ratio</string>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="1">
       <widget class="QLineEdit" name="lineMaterialDensity">
        <property name="font">
@@ -250,7 +296,7 @@
       <x>10</x>
       <y>220</y>
       <width>1071</width>
-      <height>511</height>
+      <height>535</height>
      </rect>
     </property>
     <property name="minimumSize">
@@ -317,37 +363,11 @@
     <column/>
     <column/>
    </widget>
-   <widget class="QPushButton" name="buttonAddRow">
-    <property name="geometry">
-     <rect>
-      <x>470</x>
-      <y>740</y>
-      <width>75</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Add Row</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="buttonDelRow">
-    <property name="geometry">
-     <rect>
-      <x>550</x>
-      <y>740</y>
-      <width>75</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Del Row</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="buttonAddCol">
     <property name="geometry">
      <rect>
       <x>660</x>
-      <y>740</y>
+      <y>760</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -360,7 +380,7 @@
     <property name="geometry">
      <rect>
       <x>740</x>
-      <y>740</y>
+      <y>760</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -372,10 +392,10 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>230</x>
+      <x>215</x>
       <y>30</y>
-      <width>271</width>
-      <height>79</height>
+      <width>292</width>
+      <height>78</height>
      </rect>
     </property>
     <property name="font">
@@ -547,7 +567,7 @@
       <x>780</x>
       <y>29</y>
       <width>263</width>
-      <height>50</height>
+      <height>60</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout_2">
@@ -605,7 +625,7 @@
       <x>510</x>
       <y>30</y>
       <width>263</width>
-      <height>50</height>
+      <height>60</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout_3">
