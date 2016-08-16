@@ -29,11 +29,12 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
         Ui_MainWindow.__init__(self)
         self.setupUi(self)
 
-        self.materials = [
-                     ['Steel', 7850, 210, 0.293],
-                     ['Aluminium', 1, 2, 0.3],
-                     ['Titanium', 3, 4, 0.3],
-                     ['Custom', 0, 0, 0]]  # leave Custom at the end
+        self.materials = [  # density, modulus, poisson
+                         ['Steel',     7850, 200, 0.29],
+                         ['Aluminium', 2800,  69, 0.33],
+                         ['Titanium',  4400, 120, 0.32],
+                         ['Concrete',  2300,  20, 0.20],
+                         ['Custom', 0, 0, 0]]  # leave Custom at the end
 
         # tests
         # self.comboMaterial = QtGui.QComboBox(self)
@@ -122,6 +123,8 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
 
         for i, h in enumerate(top_headers):
             self.table.setHorizontalHeaderItem(i, QtGui.QTableWidgetItem(h))
+        
+        self.table.horizontalHeader().setStretchLastSection(True)
 
         self.update_WT = True
         self.createtable()
@@ -356,6 +359,7 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
 
             h = 'Pipe %.0fin x %.1fmm' % (OD/25.4, WT)
             self.table.setHorizontalHeaderItem(col, QtGui.QTableWidgetItem(h))
+            self.table.resizeColumnsToContents()
 
             try:
                 rho = float(dot(self.table.item(3, col).text()))
