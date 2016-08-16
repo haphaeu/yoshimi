@@ -234,9 +234,9 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
               OD, ID, rho, contents_density, coating_thickness,
               coating_density, liner_thickness, liner_density)
         # update output
-        self.lineAxialStiffness.setText('%.1f' % EA)
-        self.lineBendingStiffness.setText('%.1f' % EI)
-        self.lineTorsionalStiffness.setText('%.1f' % GJ)
+        self.lineAxialStiffness.setText('{:,.1f}'.format(EA).replace(',', ' '))
+        self.lineBendingStiffness.setText('{:,.1f}'.format(EI).replace(',', ' '))
+        self.lineTorsionalStiffness.setText('{:,.1f}'.format(GJ).replace(',', ' '))
         self.lineWeightDryEmpty.setText('%.3f' % dry_weight_empty)
         self.lineWeightDryFilled.setText('%.3f' % dry_weight_filled)
         self.lineWeightWetFilled.setText('%.3f' % wet_weight_filled)
@@ -372,9 +372,9 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
 
             EA, EI, GJ = self.cross_section(OD, ID, E, v)
 
-            self.table.setItem(11, col, self.cell('%.1f' % EA, True))
-            self.table.setItem(12, col, self.cell('%.1f' % EI, True))
-            self.table.setItem(13, col, self.cell('%.1f' % GJ, True))
+            self.table.setItem(11, col, self.cell('{:,.1f}'.format(EA).replace(',', ' '), True))
+            self.table.setItem(12, col, self.cell('{:,.1f}'.format(EI).replace(',', ' '), True))
+            self.table.setItem(13, col, self.cell('{:,.1f}'.format(GJ).replace(',', ' '), True))
 
             try:
                 contents_density = float(dot(self.table.item(6, col).text()))    # kg/m3
