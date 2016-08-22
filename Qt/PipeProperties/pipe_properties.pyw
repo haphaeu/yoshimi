@@ -123,7 +123,7 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
 
         for i, h in enumerate(top_headers):
             self.table.setHorizontalHeaderItem(i, QtGui.QTableWidgetItem(h))
-        
+
         self.table.horizontalHeader().setStretchLastSection(True)
 
         self.update_WT = True
