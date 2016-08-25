@@ -9,6 +9,9 @@ switching to variable time-steps.
 *** The tricky part to integrate this into the automate_batch, is that there is not way to know
 if the simulation is not ready yet because of unstable dynamics or any other reason.
 
+==> 25-Aug-2016: This has been incorporated into automate_batch repository and will be further 
+    developed there, together with the dof_status script. Keeping a copy here.
+
 Created on Thu Aug 11 14:44:22 2016
 
 @author: rarossi
