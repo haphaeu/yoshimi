@@ -112,16 +112,20 @@ class GridFromImage(GridWithWeights):
                 print(tile, end=' '*stretch)
             print('')
 
-    def show_path(self, start, goal, came_from, save=False):
-        fig2 = self.fig.copy()
+    def show_path(self, start, goal, came_from,
+                  img_high=None, scale=1, save=False):
+        if not img_high: img_high = self.figname
+        fig2 = pylab.imread(img_high)
         current = goal
         while not current == start:
             x, y = current
+            x *= scale
+            y *= scale
             fig2[y][x] = np.array([255, 0, 0], dtype=np.uint8)
             current = came_from[current]
         pylab.imshow(fig2)
         if save:
-            pylab.imsave(arr=fig2, fname=self.figname[:-4]+'_minpath.png')
+            pylab.imsave(arr=fig2, fname=img_high[:-4]+'_minpath.png')
 
 
 import heapq
@@ -193,7 +197,7 @@ def a_star_search(graph, start, goal, verbose=False):
 
     while not frontier.empty():
         current = frontier.get()
-        if verbose: print(current, end='')
+        if verbose: print(current, end=' ')
         if current == goal:
             break
 
