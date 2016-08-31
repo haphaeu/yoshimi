@@ -24,12 +24,19 @@ class Vertex():
     .otherVert: list of the vertex on the other side of the connected
                 edges.
     """
-    def __init__(self, distance, unvisited, nearest):
+    def __init__(self, num, distance, unvisited, nearest, coords=None):
+        self.id = num
         self.distance = distance
         self.unvisited = unvisited
         self.nearest = nearest
+        self.coords = coords
         self.edges = []
         self.otherVert = []
+
+    def cost(self, vnext):
+        if vnext not in self.otherVert:
+            raise  # ??
+        return self.edges[self.otherVert.index(vnext.id)]
 
 
 def nextVertex(vertexes):
@@ -78,6 +85,68 @@ def dijkstraGraph(vertexes, edges, initialVertex, verbose=False):
         left = sum([_.unvisited for _ in vertexes])
 
 
+def heuristic(a, b):
+    (x1, y1) = a.coords
+    (x2, y2) = b.coords
+    return abs(x1 - x2) + abs(y1 - y2)
+
+
+def vid(i, j, width):
+    """vertex id"""
+    return width*i+j
+
+
+def div(vid, width):
+    """inverse of vid"""
+    return int(vid/width), vid % width
+
+
+def calc_num_vertex(h, w):
+    """height, width --> number of vertexes in a rectangular grid"""
+    return 2 * (h-1) * (w-1) + h + w - 2
+
+
+def cost(edges, vfrom, vto):
+    return edges[vfrom.edges[vfrom.otherVert.index(vto.id)]].d
+
+
+def get_best(frontier):
+    minp = 99999
+    for v, p in frontier:
+        if p < minp:
+            minp = p
+            minv = v
+    frontier.remove((minv, minp))
+    return minv
+
+
+def a_star(edges, vertexes, vstart, vgoal, verbose=False):
+    frontier = {(vstart, 0)}
+    came_from = {}
+    cost_so_far = {}
+    came_from[vstart.id] = None
+    cost_so_far[vstart.id] = 0
+
+    while frontier:
+
+        vcurrent = get_best(frontier)
+        if verbose: print(vcurrent.id, end=' ')
+        if vcurrent.id == vgoal.id:
+            break
+
+        for id_next in vcurrent.otherVert:
+            # new_cost = cost_so_far[vcurrent] + vertexes.cost(vcurrent, vnext)
+            new_cost = cost_so_far[vcurrent.id] + cost(edges, vcurrent, vertexes[id_next])
+
+            if id_next not in cost_so_far or new_cost < cost_so_far[id_next]:
+                cost_so_far[id_next] = new_cost
+                priority = new_cost + heuristic(vgoal, vertexes[id_next])
+                frontier.add((vertexes[id_next], priority))
+                came_from[id_next] = vcurrent
+
+    return came_from, cost_so_far
+
+
 if __name__ == '__main__':
     # MAIN
 
@@ -96,7 +165,7 @@ if __name__ == '__main__':
     # initialise the list with the vertexes, with a
     # high initial value for minimum distance (MINIMUM),
     # all marked as unvisited and nearest vertexes marked as -1
-    MyVertexes = [Vertex(MINIMUM, True, 0) for _ in range(NumVertexes)]
+    MyVertexes = [Vertex(_, MINIMUM, True, 0) for _ in range(NumVertexes)]
 
     # loops through all the edges and mark at which
     # vertexes they are connected to.

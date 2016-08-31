@@ -31,10 +31,12 @@ class View(QtGui.QGraphicsView):
         self.setScene(QtGui.QGraphicsScene(self))
         self.setSceneRect(QtCore.QRectF(self.viewport().rect()))
         self.points = 0
+        self.display_image()
 
     def mousePressEvent(self, event):
         if self.points == 2:
             self.scene().clear()
+            self.display_image()
             self.points = 0
 
         self._start = event.pos()
@@ -43,6 +45,18 @@ class View(QtGui.QGraphicsView):
         text.setBrush(QtCore.Qt.red)
         text.setPos(start)
         self.points += 1
+
+    def display_image(self):
+        with open('maze.bmp', 'rb') as f:
+            content = f.read()
+        self.image = QtGui.QImage()
+        self.image.loadFromData(content)
+        w, h = self.image.size().width(), self.image.size().height()
+        pixMap = QtGui.QPixmap.fromImage(self.image)
+        self.scene().addPixmap(pixMap)
+        self.fitInView(QtCore.QRectF(0, 0, 2*w, 2*h), QtCore.Qt.IgnoreAspectRatio)
+        self.scene().update()
+        QtCore.QCoreApplication.processEvents()
 
 if __name__ == '__main__':
 

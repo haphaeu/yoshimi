@@ -18,19 +18,7 @@ def ascii_print(m):
         print('')
 
 
-def vid(i, j, width):
-    """vertex id"""
-    return width*i+j
 
-
-def div(vid, width):
-    """inverse of vid"""
-    return int(vid/width), vid % width
-
-
-def calc_num_vertex(h, w):
-    """height, width --> number of vertexes in a rectangular grid"""
-    return 2 * (h-1) * (w-1) + h + w - 2
 
 
 def save_fig(fig, min_path, width, name='minpath.bmp'):
@@ -41,8 +29,8 @@ def save_fig(fig, min_path, width, name='minpath.bmp'):
 
 
 # fig = pylab.imread('beta.bmp')
-# fig = pylab.imread('beta_3x4.bmp')
-fig = pylab.imread('beta_75x100.bmp')
+fig = pylab.imread('beta_3x4.bmp')
+# fig = pylab.imread('beta_75x100.bmp')
 height, width = len(fig), len(fig[0])
 
 matrix = np.ones((height, width), dtype=int)
@@ -66,7 +54,7 @@ for i in range(height):
                                                                         matrix[i][j+1])))
 
 num_vertex = height*width
-vertexes = [Vertex(DijkstraMinPath.MINIMUM, True, 0) for _ in range(num_vertex)]
+vertexes = [Vertex(_, DijkstraMinPath.MINIMUM, True, 0, div(_, width)) for _ in range(num_vertex)]
 
 for i in range(len(edges)):
         vertexes[edges[i].v1].edges.append(i)
@@ -100,3 +88,6 @@ print("The path for minimum distance is through vertexes:")
 print(MinPath)
 
 save_fig(fig, MinPath, width)
+
+
+came_from, cost_so_far = DijkstraMinPath.a_star(edges, vertexes, vertexes[0], vertexes[2], True)
