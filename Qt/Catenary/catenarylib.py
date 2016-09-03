@@ -17,7 +17,7 @@ Created on Wed Sep 03
 @author: raf
 """
 
-from math import pi, tan, cos, asinh
+from math import pi, tan, cos, asinh, radians
 
 
 def CatenaryCalcTAV(TA, V):
@@ -92,7 +92,9 @@ def CatenarySolveL_MBR(L, MBR):
 
 
 def CatenarySolveH_LMBR(H, param, flag='L'):
-    """CatenarySolveH_LMBR(H, param, flag) -> TA, V, H, L, MBR
+    """
+    CatenarySolveH_LMBR(H, param, flag) -> TA, V, H, L, MBR
+
     if flag == 'L':
         CatenarySolveH_LMBR(H, L, 'L') -> TA, V, H, L, MBR
     if flag == 'MBR':
@@ -121,7 +123,10 @@ def CatenarySolveH_LMBR(H, param, flag='L'):
 
 
 def CatenarySolveV_HLMBR(V, param, flag='H'):
-    """CatenarySolveV_HLMBR(V, param, flag) -> TA, V, H, L, MBR
+    """
+    CatenarySolveV_HLMBR(V, param, flag) -> TA, V, H, L, MBR
+        Solve catenary parameters given V and either H, L or MBR.
+
     if flag == 'H':
         CatenarySolveV_HLMBR(V, H, 'H') -> TA, V, H, L, MBR
     if flag == 'L':
@@ -155,7 +160,7 @@ def CatenarySolveV_HLMBR(V, param, flag='H'):
 
 
 def unit_tests():
-    """Tests all catenary functions for a known solution."""
+    """Test all catenary functions for a known solution."""
     from numpy import allclose
     TA, V, H, L, MBR = (12, 1800, 1064.3904537756875,
                         2222.8148817630927, 472.47388849652003)
@@ -171,6 +176,32 @@ def unit_tests():
         return True
     else:
         return False
+
+
+def reactions(TA, L, w):
+    """
+    `reactions(TA, L, w) -> (Fh, Fv, F)`
+        Reaction forces due to catenary weight.
+
+    Parameters
+    ----------
+    TA : float
+        top angle with vertical, in degrees.
+    L : float
+        length of suspended line, im meters.
+    w : float
+        unit weight of line, in kg/m
+    Output
+    ------
+    (Fh, Fv, F) : tuple of floats, in kN
+        Horizontal, vertical and total reaction force at the top of the line
+        due to self weight.
+    """
+    mg = 9.80665/1000
+    Fv = w * L * mg
+    Fh = Fv * tan(radians(TA))
+    F = Fv / cos(radians(TA))
+    return Fh, Fv, F
 
 
 if __name__ == '__main__':
