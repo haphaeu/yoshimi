@@ -20,11 +20,11 @@ def chksha(fname, sha):
     out = hashlib.sha256(f.read()).hexdigest()
     print('Output:', out)
     if sha == out:
-        print('Pass! Hashes match, file is valid!')
+        print('Pass. Hashes match, file is valid.')
     else:
-        print("FAIL! Hashes don't match. Got:")
+        print("FAIL. Hashes don't match.")
 
 if __name__ == '__main__':
-    fname = 'E:\\Downloadz\\ChromeDownloads\\systemrescuecd-x86-4.8.0.iso'
-    sha = '06e6847384063bbb67c1c8f0824e995046c9ff125ad07a4214b129efb9b18241'
+    fname = 'E:\\sysrecd\\iso\\systemrescuecd-x86-4.8.3.iso'
+    sha = '1a4a1d35e32a812f42415596695e4dec9f50781c251d034579a45df1e9049e3e'
     chksha(fname, sha)
