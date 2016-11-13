@@ -70,11 +70,11 @@ def optimize_loc(res_loc, res_scale, load_distro, conf_target, eps):
 
 if __name__ == '__main__':
     # input data
-    conf_target = 0.9  # confidence level of non-failure
+    conf_target = 0.99  # confidence level of non-failure
     load_loc = 100          # location parameter for the load distribution
-    load_scale = 5      # scale parameter for the load distribution
-    res_scale = 3.5     # scale parameter for the resistance distribution
-    eps = 1e-8           # domain = pdf > eps, for load and resistance
+    load_scale = 10      # scale parameter for the load distribution
+    res_scale = 8     # scale parameter for the resistance distribution
+    eps = 1e-3           # domain = pdf > eps, for load and resistance
 
     # frozen load distribution
     load_distro = ss.gumbel_r(loc=load_loc, scale=load_scale)
@@ -95,7 +95,10 @@ if __name__ == '__main__':
     plt.plot(x, load_distro.pdf(x), label='load pdf')
     plt.plot(x, res_distro.pdf(x), label='resistance pdf')
     plt.grid()
+    plt.title('Load x Resistance')
     plt.legend(loc='best')
+    plt.xticks(())
+    plt.yticks(())
     plt.show()
 
     print('Confidence %.3f%%' % (100*confidence))
