@@ -1,1 +1,2 @@
-c:\anaconda3\pythonw D:\git\haphaeu\yoshimi\Qt\PipeProperties\pipe_properties.pyw
+cd /d %~dp0
+pythonw pipe_properties.pyw
