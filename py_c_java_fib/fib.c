@@ -36,7 +36,7 @@ long fib(int n) {
 int main()
 {
     struct timeval tvBegin, tvEnd, tvDiff;
-    int n = 29;
+    int n = 39;
     long res;
 
     // begin

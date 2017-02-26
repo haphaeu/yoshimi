@@ -10,7 +10,7 @@ public class Fib {
 
     public static void main(String[] args) {
         long res;
-        int n = 29;
+        int n = 39;
         
         long startTime = System.nanoTime();
         res = fib(n);
