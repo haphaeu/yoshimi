@@ -78,24 +78,15 @@ def load_data():
 net = 0
 def init_net():
     global net
-    if network.__name__ == 'network':
-        net = network.Network([784, 30, 10])
-    elif network.__name__ == 'network2':
-        net = network.Network([784, 30, 10], cost=network.CrossEntropyCost)
-        net.large_weight_initializer()
-    else:
-        return False
+    net = network.Network([784, 80, 10], cost=network.CrossEntropyCost)
+
 
 def train(epochs=5):
-    if network.__name__ == 'network':
-        net.SGD(training_data, epochs, 10, 3.0, test_data=test_data)
-    elif network.__name__ == 'network2':
-        # set lmbda proportional to training set size: 5 for 50000, 0.1 for 1000.
-        net.SGD(training_data, epochs, 10, 3.5, evaluation_data=test_data, lmbda=5.0,
-                monitor_evaluation_cost=True, monitor_evaluation_accuracy=True,
-                monitor_training_cost=True, monitor_training_accuracy=True)
-    else:
-        return False
+    # set lmbda proportional to training set size: 5 for 50000, 0.1 for 1000.
+    net.SGD(training_data, epochs, 10, 3.0, evaluation_data=test_data, lmbda=5.0,
+            monitor_evaluation_cost=True, monitor_evaluation_accuracy=True,
+            monitor_training_cost=True, monitor_training_accuracy=True)
+
 
 def test_my_images():
     imsR = [r'images\r{}.png'.format(i) for i in range(10)]
@@ -113,8 +104,8 @@ def test_my_images():
     net.check([im.data for im in imgs])
     print('Maries score', net.evaluate([im.data for im in imgs]))
 
-
-# ###
-#init_net()
+load_data()
+init_net()
+train()
 #net.load_state()
 #test_my_images()

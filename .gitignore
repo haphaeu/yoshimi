@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.exe
 *.class
+*.java~
 
 *.gz
 
