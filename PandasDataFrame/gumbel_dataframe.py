@@ -19,7 +19,7 @@ gamma = 0.5772  # Euler constant
 need_more_seeds = 'need larger sample for this fractile'
 use_sample = 'use sample'
 
-pns = [0.9, 0.99]
+pns = [0.75, 0.8, 0.9, 0.99]
 
 # %%
 # df = pd.read_table('results_mini.txt')

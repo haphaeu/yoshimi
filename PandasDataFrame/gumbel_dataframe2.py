@@ -5,28 +5,31 @@ Trying to improve the Gumbel module.
 
 The idea is to apply functions staight from results.txt to get to results.
 
+
+Conclusion: this is not more efficient than the original gumbel opt module.
+The DataFrame.aggregate() forces the same things to be calculated more than once and
+the MemoizeMutable is expensive.
+
+For one case example, best run-time I've got is 12s, against 8s from gumbel_opt.
+
+Maybe worth putting more efforts into the original module...
+
 Created on Mon Jul 17 11:44:58 2017
 
 @author: rarossi
 """
-# %%
 import pandas as pd
 import numpy as np
 from scipy import stats as ss
-
+import pickle
 
 gamma = 0.5772  # Euler constant
-need_more_seeds = 'need larger sample for this fractile'
-use_sample = 'use sample'
-
-pns = [0.9, 0.99]
-
-# %%
-import pickle
+tau = np.sqrt(6)/np.pi
 
 
 class MemoizeMutable:
-    """Memoize decorator for unhashable items, using pickle"""
+    """Memoize decorator for unhashable arguments."""
+
     def __init__(self, fn):
         self.fn = fn
         self.memo = {}
@@ -34,30 +37,28 @@ class MemoizeMutable:
     def __call__(self, *args, **kwds):
         str = pickle.dumps(args, 1)+pickle.dumps(kwds, 1)
         if str not in self.memo:
-        #    print("miss")  # DEBUG INFO
+            # print("miss")  # DEBUG INFO
             self.memo[str] = self.fn(*args, **kwds)
         # else:
         #    print("hit")  # DEBUG INFO
-
         return self.memo[str]
 
-# %%
-# df = pd.read_table('results_mini.txt')
-df = pd.read_table('results.txt')
-keys = ['WaveHs', 'WaveTp', 'WaveDirection']
-df = df.set_index(keys=keys)
 
-# Split this in two dfs, one for max, one for min
-df_max = df[df.columns[['max' in i.lower() for i in df.columns.values]]]
-df_min = df[df.columns[['min' in i.lower() for i in df.columns.values]]]
-
-# %%
-# functions to be calculated for diagnosis
+# Functions to be called more than once with same arguments - with memoizing
 
 
 @MemoizeMutable
 def gME_min_fit(x):
-    return ss.gumbel_l._fitstart(x)
+    # return ss.gumbel_l._fitstart(x)
+    beta = np.std(x)*tau
+    return np.mean(x)+gamma*beta, beta
+
+
+@MemoizeMutable
+def gME_max_fit(x):
+    # return ss.gumbel_r._fitstart(x)
+    beta = np.std(x)*tau
+    return np.mean(x)-gamma*beta, beta
 
 
 @MemoizeMutable
@@ -66,13 +67,10 @@ def gMLE_min_fit(x):
 
 
 @MemoizeMutable
-def gME_max_fit(x):
-    return ss.gumbel_r._fitstart(x)
-
-
-@MemoizeMutable
 def gMLE_max_fit(x):
     return ss.gumbel_r.fit(x)
+
+# Functions to be passed to DataFrame.aggretate()
 
 
 def muME_min(x):
@@ -154,44 +152,60 @@ def gMLE_min(x, pn=0.9):
 def gMLE_max(x, pn=0.9):
     return ss.gumbel_r.ppf(pn, *gMLE_max_fit(x))
 
-agg_list_min = [np.std, np.mean, np.max, np.min, betaME_min, muME_min, betaMLE_min, muMLE_min]
-agg_list_max = [np.std, np.mean, np.max, np.min, betaME_max, muME_max, betaMLE_max, muMLE_max]
-for pn in pns:
-    # All this thing with funcion names changes is because more than 1 lambda function
-    # is not accepted by pandas in an aggregate list...
-    label = '_{}'.format(pn).replace('.', '_')
-    agg_list_min.extend([lambda x: gME_min(x, pn=pn),
-                         lambda x: gMLE_min(x, pn=pn),
-                         lambda x: sample_min(x, pn=pn)])
-    agg_list_min[-3].__name__ = 'gME_min'+label
-    agg_list_min[-2].__name__ = 'gMLE_min'+label
-    agg_list_min[-1].__name__ = 'sample_min'+label
-    agg_list_max.extend([lambda x: gME_max(x, pn=pn),
-                         lambda x: gMLE_max(x, pn=pn),
-                         lambda x: sample_max(x, pn=pn)])
-    agg_list_max[-3].__name__ = 'gME_max'+label
-    agg_list_max[-2].__name__ = 'gMLE_max'+label
-    agg_list_max[-1].__name__ = 'sample_max'+label
 
-# %%
-# Do the magic - aggregate data frame from results.txt into the required output format
+if __name__ == '__main__':
 
-df_res = pd.concat([df_min.groupby(by=keys).agg(agg_list_min),
-                    df_max.groupby(by=keys).agg(agg_list_max)], axis=1)
+    need_more_seeds = 'need larger sample for this fractile'
+    use_sample = 'use sample'
+    pns = [0.9, 0.99]  # Fractiles to extract extremes for.
 
-# Finally write results to excel.
-# Note that sheet iterates through df.columns to keep original order of columns
-##xl_writer = pd.ExcelWriter('lixo.xlsx')
-##for sheet in df.columns:
-##    df_res[sheet].reset_index().to_excel(xl_writer, index=False, sheet_name=sheet)
-##xl_writer.save()
+    # Read inpu text file into a DataFrame
+    # df = pd.read_table('results_mini.txt')
+    df = pd.read_table('results.txt')
+    keys = ['WaveHs', 'WaveTp', 'WaveDirection']
+    df = df.set_index(keys=keys)
 
+    # Split this in two dfs, one for max, one for min, due to different fits
+    df_max = df[df.columns[['max' in i.lower() for i in df.columns.values]]]
+    df_min = df[df.columns[['min' in i.lower() for i in df.columns.values]]]
+
+    # List of functions to be passed to DataFrame.aggregate() after GropedBy sea state.
+    agg_list_min = [np.std, np.mean, np.max, np.min, betaME_min, muME_min, betaMLE_min, muMLE_min]
+    agg_list_max = [np.std, np.mean, np.max, np.min, betaME_max, muME_max, betaMLE_max, muMLE_max]
+    for pn in pns:
+        # All this thing with funcion names changes is because more than 1 lambda function
+        # is not accepted by pandas in an aggregate list...
+        label = '_{}'.format(pn).replace('.', '_')
+        agg_list_min.extend([lambda x: gME_min(x, pn=pn),
+                             lambda x: gMLE_min(x, pn=pn),
+                             lambda x: sample_min(x, pn=pn)])
+        agg_list_min[-3].__name__ = 'gME_min'+label
+        agg_list_min[-2].__name__ = 'gMLE_min'+label
+        agg_list_min[-1].__name__ = 'sample_min'+label
+        agg_list_max.extend([lambda x: gME_max(x, pn=pn),
+                             lambda x: gMLE_max(x, pn=pn),
+                             lambda x: sample_max(x, pn=pn)])
+        agg_list_max[-3].__name__ = 'gME_max'+label
+        agg_list_max[-2].__name__ = 'gMLE_max'+label
+        agg_list_max[-1].__name__ = 'sample_max'+label
+
+    # Do the magic - aggregate data frame from results.txt into the required output format
+
+    df_res = pd.concat([df_min.groupby(by=keys).agg(agg_list_min),
+                        df_max.groupby(by=keys).agg(agg_list_max)], axis=1)
+
+    # Finally write results to excel.
+    # Note that sheet iterates through df.columns to keep original order of columns
+    xl_writer = pd.ExcelWriter('lixo.xlsx')
+    for sheet in df.columns:
+        df_res[sheet].reset_index().to_excel(xl_writer, index=False, sheet_name=sheet)
+    xl_writer.save()
 
 # %%
 #                            .rename(columns={'amax': 'max', 'amin': 'min'})
 # Old studd
 #
-#df_min.groupby(by=keys).describe(percentiles=[0.01, 0.1, 0.5, 0.9, 0.99]).head()
+# df_min.groupby(by=keys).describe(percentiles=[0.01, 0.1, 0.5, 0.9, 0.99]).head()
 #
 # Create a multiindex object for the results dataframe
 ## mindex = pd.MultiIndex.from_product(iterables=[['stdev', 'mean', 'max', 'min'], df.columns])
