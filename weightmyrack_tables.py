@@ -2,13 +2,13 @@
 """
 Scrapping of weightmyrack.com
 
-Loads properties tables for all carabiners.
+Loads properties tables for types of gear.
 
-Saves a pickle with a dictionary
-{name: {param1: value1, param2: value2, ...}, ...}
+
+@author: haphaeu
+@date: 2017-08-29
 """
 
-from lxml import html
 import pandas as pd
 import requests
 import pickle
@@ -16,7 +16,12 @@ import re
 import os
 
 
-def load_database(name='weightmyrack_biners.pickle'):
+def pickle_name(item_type):
+    return 'weightmyrack_%s.pickle' % item_type
+
+
+def load_database(item_type='Carabiner'):
+    name = pickle_name(item_type)
     if os.path.exists(name):
         print('Loading existing database')
         with open(name, 'rb') as handle:
@@ -25,23 +30,30 @@ def load_database(name='weightmyrack_biners.pickle'):
         return dict()
 
 
-def save_database(biners_table, name='weightmyrack_biners.pickle',):
+def save_database(table, item_type='Carabiner'):
+    name = pickle_name(item_type)
     with open(name, 'wb') as handle:
-        pickle.dump(biners_table, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(table, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def get_biners_names():
-    print('Retrieving page contents')
-    url = 'http://weighmyrack.com/Carabiner/index.html'
+def get_names(item_type='Carabiner'):
+    """Gets the name of all available items in the site.
+    item_type must match the names used in the site:
+        Carabiner
+        Cams
+        etc...
+    """
+    url = 'http://weighmyrack.com/%s/index.html' % item_type
     page = requests.get(url)
     cont = page.content.decode('utf-8')
-    
-    print('Filtering available carabiners')
-    e = re.compile(r'.*href="/[cC]arabiner/([^"]*)".*')
-    return e.findall(cont)
+
+    print('Filtering available items')
+    e = re.compile(r'.*href="/%s/([^"]*)".*' % item_type, )
+    return e.findall(cont, re.IGNORECASE)
 
 
 def remove_units(biners):
+    """obsolete. not used..."""
     params = ['Weight (g)', 'Gate Opening']
     for b in biners.keys():
         for p in params:
@@ -52,55 +64,58 @@ def remove_units(biners):
                     biners[b][p] = 999
 
 
-def to_dataframe(biners_table, ):
-    df = pd.DataFrame(data=biners_table)
+def to_dataframe(table):
+    df = pd.DataFrame(data=table)
     return df.transpose()
 
 
-def get_biners_specs(biners, biners_table):
-                    
-    for i, biner in enumerate(biners):
-        print('%d/%d %s' % (i+1, len(biners), biner))
-        url = 'http://weighmyrack.com/Carabiner/' + biner
-#        page = requests.get(url)
-#        tree = html.fromstring(page.content)
-#        params = tree.xpath('//td[@class="specs-property"]/text()')
-#        values = [v.strip() for v in tree.xpath('//td[@class="specs-value"]/text()')]
-#        specs = {p: v for p, v in zip(params, values)}
-#        # adding the 3 strengths as a list of 3 values:
-#        try:
-#            specs[params[-1]] = values[-3:]
-#            biners_table[biner] = specs
-#            save_database(biners_table)
-#        except:
-#            print('   funny biner found... getting rid of it...')
-        tbl = pd.read_html(url, index_col=0)[0]
+def get_specs(table, item_names, item_type='Carabiner'):
+    """Retrieves the specs-table of an item and saves it to a dictionary.
+    A pickle is saved after every item so that a broken loading can be resumed.
+    """
+    for i, name in enumerate(item_names):
+        print('%d/%d %s' % (i+1, len(item_names), name))
+        url = 'http://weighmyrack.com/%s/' % item_type + name
+        try:
+            tbl = pd.read_html(url, index_col=0, attrs={'class': 'technical-specs table'})[0]
+        except ValueError:
+            print('    funny things happening... skipping this one...')
+            continue
         tbl.index = [i[:20] for i in tbl.index]
         specs = {p: v[0] for p, v in zip(tbl.index, tbl.values)}
-        biners_table[biner] = specs
+        table[name] = specs
+        save_database(table, item_type)
 
 
 def main():
-    print('Scrapping weightmyrack for biners')
-    
-    biners = set(get_biners_names())
-    print('Found %d carabiners' % len(biners))
-    
-    biners_db = load_database()
-    if biners_db:
-        print('Database contains %d biners' % len(biners_db))
-        biners -= biners_db.keys()
-    
-    print('Carabiners to be retrieved: %d' % len(biners))
-    print('Retrieving specs for all carabiners')
-    get_biners_specs(biners, biners_db)
-    
-    remove_units(biners_db)
-    save_database(biners_db)
-    
-    df = to_dataframe(biners_db)
-    # df.to_excel('weightmyrack_biners.xlsx')
-    
+
+    item_types = ['Carabiner', 'Cam']
+    dataframes = dict()
+
+    for item_type in item_types:
+        print('Scrapping weightmyrack for %s' % item_type)
+
+        print('Retrieving page contents')
+        item_names = set(get_names(item_type))
+        print('Found %d items of type %s' % (len(item_names), item_type))
+
+        table = load_database(item_type)
+        if table:
+            print('Database contains %d items' % len(table))
+            item_names -= table.keys()
+
+        print('Items to be retrieved: %d' % len(item_names))
+        print('Retrieving specs for all items')
+        get_specs(table, item_names, item_type)
+
+        save_database(table, item_type)
+
+        dataframes[item_type] = to_dataframe(table)
+
+    writer = pd.ExcelWriter('weightmyrack.xlsx')
+    for key in dataframes.keys():
+        dataframes[key].to_excel(writer, sheet_name=key)
+    writer.save()
 
 
 if __name__ == '__main__':
