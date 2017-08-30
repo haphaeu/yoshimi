@@ -64,7 +64,7 @@ def threaded_factorizer(nums, nthreads):
         t.join()
 
     # Merge all partial output dicts into a single dict and return it
-    return {k: v for out_d in outs for k, v in out_d.iteritems()}
+    return {k: v for out_d in outs for k, v in out_d.items()}
 
 class worker2():
     def __init__(self, nums, out_q):
@@ -103,22 +103,41 @@ def mp_factorizer(nums, nprocs):
     return resultdict
 
 
+def mp_factorizer_pool(nums, nprocs):
+    # Using directly a Pool is much simpler to implement,
+    # however nothing is sent back.
+    # So it is ok to use for stand alone process where we're not
+    # interested in getting back results for further use.
+    p = multiprocessing.Pool(processes=nprocs)
+    p.map(factorize_naive, nums)
+
+
 if __name__ == '__main__':
-    print "allocating...",
-    nums=range(500000)
-    print "done."
-    print "running serial...",
-    t0=time.time()
+    print("allocating...", end=' ')
+    nums = list(range(300000))
+    print("done.")
+
+    print("running serial...         ", end=' ')
+    t0 = time.time()
     serial_factorizer(nums)
-    t1=time.time()
-    print "done. took %.3fs" % (t1-t0)
-    print "running multi-thread...",
-    t0=time.time()
-    threaded_factorizer(nums, 8)
-    t1=time.time()
-    print "done. took %.3fs" % (t1-t0)
-    print "running multi-processes",
-    t0=time.time()
-    mp_factorizer(nums, 8)
-    t1=time.time()
-    print "done. took %.3fs" % (t1-t0)
+    t1 = time.time()
+    print("done. took %.3fs" % (t1-t0))
+
+    print("running multi-thread...   ", end=' ')
+    t0 = time.time()
+    threaded_factorizer(nums, 4)
+    t1 = time.time()
+    print("done. took %.3fs" % (t1-t0))
+
+    print("running multi-processes...", end=' ')
+    t0 = time.time()
+    mp_factorizer(nums, 4)
+    t1 = time.time()
+    print("done. took %.3fs" % (t1-t0))
+
+    print("running mp.Pool...        ", end=' ')
+    t0 = time.time()
+    mp_factorizer_pool(nums, 4)
+    t1 = time.time()
+    print("done. took %.3fs" % (t1-t0))
+
