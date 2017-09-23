@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>389</width>
-    <height>727</height>
+    <width>465</width>
+    <height>790</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -51,7 +51,7 @@
        <enum>QTabWidget::Triangular</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <property name="usesScrollButtons">
        <bool>true</bool>
@@ -298,19 +298,6 @@
             </property>
            </widget>
           </item>
-          <item row="8" column="0">
-           <widget class="QLabel" name="label_9">
-            <property name="font">
-             <font>
-              <family>Consolas</family>
-              <pointsize>10</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Coating Thickness [mm]</string>
-            </property>
-           </widget>
-          </item>
           <item row="8" column="2">
            <widget class="QLineEdit" name="lineCoatingThickness">
             <property name="font">
@@ -330,7 +317,7 @@
              </font>
             </property>
             <property name="text">
-             <string>Coating Density [kg/m³]</string>
+             <string>Coating 1 Density [kg/m³]</string>
             </property>
            </widget>
           </item>
@@ -344,7 +331,7 @@
             </property>
            </widget>
           </item>
-          <item row="10" column="0">
+          <item row="12" column="0">
            <widget class="QLabel" name="label_7">
             <property name="font">
              <font>
@@ -357,7 +344,7 @@
             </property>
            </widget>
           </item>
-          <item row="10" column="2">
+          <item row="12" column="2">
            <widget class="QLineEdit" name="lineLinerThickness">
             <property name="font">
              <font>
@@ -367,7 +354,7 @@
             </property>
            </widget>
           </item>
-          <item row="11" column="0">
+          <item row="13" column="0">
            <widget class="QLabel" name="label_8">
             <property name="font">
              <font>
@@ -380,7 +367,7 @@
             </property>
            </widget>
           </item>
-          <item row="11" column="2">
+          <item row="13" column="2">
            <widget class="QLineEdit" name="lineLinerDensity">
             <property name="font">
              <font>
@@ -390,7 +377,7 @@
             </property>
            </widget>
           </item>
-          <item row="12" column="0">
+          <item row="14" column="0">
            <widget class="QLabel" name="label">
             <property name="font">
              <font>
@@ -403,7 +390,7 @@
             </property>
            </widget>
           </item>
-          <item row="12" column="2">
+          <item row="14" column="2">
            <widget class="QLineEdit" name="lineAxialStiffness">
             <property name="font">
              <font>
@@ -413,7 +400,7 @@
             </property>
            </widget>
           </item>
-          <item row="13" column="0" colspan="2">
+          <item row="15" column="0" colspan="2">
            <widget class="QLabel" name="label_2">
             <property name="font">
              <font>
@@ -426,7 +413,7 @@
             </property>
            </widget>
           </item>
-          <item row="13" column="2">
+          <item row="15" column="2">
            <widget class="QLineEdit" name="lineBendingStiffness">
             <property name="font">
              <font>
@@ -436,7 +423,7 @@
             </property>
            </widget>
           </item>
-          <item row="14" column="0" colspan="2">
+          <item row="16" column="0" colspan="2">
            <widget class="QLabel" name="label_3">
             <property name="font">
              <font>
@@ -449,7 +436,7 @@
             </property>
            </widget>
           </item>
-          <item row="14" column="2">
+          <item row="16" column="2">
            <widget class="QLineEdit" name="lineTorsionalStiffness">
             <property name="font">
              <font>
@@ -459,7 +446,7 @@
             </property>
            </widget>
           </item>
-          <item row="15" column="0" colspan="2">
+          <item row="17" column="0" colspan="2">
            <widget class="QLabel" name="label_4">
             <property name="font">
              <font>
@@ -472,7 +459,7 @@
             </property>
            </widget>
           </item>
-          <item row="15" column="2">
+          <item row="17" column="2">
            <widget class="QLineEdit" name="lineWeightDryEmpty">
             <property name="font">
              <font>
@@ -482,7 +469,7 @@
             </property>
            </widget>
           </item>
-          <item row="16" column="0" colspan="2">
+          <item row="18" column="0" colspan="2">
            <widget class="QLabel" name="label_5">
             <property name="font">
              <font>
@@ -495,7 +482,7 @@
             </property>
            </widget>
           </item>
-          <item row="16" column="2">
+          <item row="18" column="2">
            <widget class="QLineEdit" name="lineWeightDryFilled">
             <property name="font">
              <font>
@@ -505,7 +492,7 @@
             </property>
            </widget>
           </item>
-          <item row="17" column="0" colspan="2">
+          <item row="19" column="0" colspan="2">
            <widget class="QLabel" name="label_6">
             <property name="font">
              <font>
@@ -518,7 +505,7 @@
             </property>
            </widget>
           </item>
-          <item row="17" column="2">
+          <item row="19" column="2">
            <widget class="QLineEdit" name="lineWeightWetFilled">
             <property name="font">
              <font>
@@ -527,6 +514,57 @@
              </font>
             </property>
            </widget>
+          </item>
+          <item row="10" column="0">
+           <widget class="QLabel" name="label_9">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>Consolas</family>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Coating 2 Thickness [mm]</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="0">
+           <widget class="QLabel" name="label_11">
+            <property name="font">
+             <font>
+              <family>Consolas</family>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Coating 2 Thickness [mm]</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="QLabel" name="label_14">
+            <property name="font">
+             <font>
+              <family>Consolas</family>
+              <pointsize>10</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Coating 1 Thickness [mm]</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="2">
+           <widget class="QLineEdit" name="lineCoating2Thickness"/>
+          </item>
+          <item row="11" column="2">
+           <widget class="QLineEdit" name="lineCoating2Density"/>
           </item>
          </layout>
         </item>
@@ -539,12 +577,22 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QTableWidget" name="table">
+          <property name="font">
+           <font>
+            <family>Consolas</family>
+           </font>
+          </property>
+          <property name="cornerButtonEnabled">
+           <bool>true</bool>
+          </property>
           <property name="rowCount">
-           <number>17</number>
+           <number>19</number>
           </property>
           <property name="columnCount">
            <number>4</number>
           </property>
+          <row/>
+          <row/>
           <row/>
           <row/>
           <row/>
@@ -611,7 +659,7 @@
        <enum>Qt::LeftToRight</enum>
       </property>
       <property name="text">
-       <string>v2.0 - Aug 2016 - by RR</string>
+       <string>v2.2 - Sep 2017 - by RR</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -625,7 +673,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>389</width>
+     <width>465</width>
      <height>21</height>
     </rect>
    </property>

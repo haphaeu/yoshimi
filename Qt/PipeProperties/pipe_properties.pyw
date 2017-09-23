@@ -11,6 +11,8 @@ VB/MS Visual Studio.
 
 Created on Wed Aug 10 18:29:14 2016
 
+Updated 23.09.2017 - included options for 2 external coatings
+
 @author: raf
 """
 
@@ -51,6 +53,8 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
         self.lineWT.setText('0.0')
         self.lineCoatingThickness.setText('0.0')
         self.lineCoatingDensity.setText('0.0')
+        self.lineCoating2Thickness.setText('0.0')
+        self.lineCoating2Density.setText('0.0')
         self.lineLinerThickness.setText('0.0')
         self.lineLinerDensity.setText('0.0')
         self.lineContentsDensity.setText('0.0')
@@ -83,6 +87,8 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
         self.lineWT.textChanged.connect(self.calc_simple)
         self.lineCoatingThickness.textChanged.connect(self.calc_simple)
         self.lineCoatingDensity.textChanged.connect(self.calc_simple)
+        self.lineCoating2Thickness.textChanged.connect(self.calc_simple)
+        self.lineCoating2Density.textChanged.connect(self.calc_simple)
         self.lineLinerThickness.textChanged.connect(self.calc_simple)
         self.lineLinerDensity.textChanged.connect(self.calc_simple)
         self.lineMaterialModulus.textChanged.connect(self.calc_simple)
@@ -101,10 +107,13 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
         # set up the table
         self.table.horizontalHeader().setVisible(True)
         self.table.verticalHeader().setVisible(True)
+        self.table.horizontalHeader().setStretchLastSection(True)
+        self.table.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
 
         headers = ('OD [mm]', 'ID [mm]', 'WT [mm]',
                    'Material Density [kg/m³]', 'Material Modulus [GPa]', 'Poisson Ratio',
-                   'Contents Density [kg/m³]', 'Coating Thickness [mm]', 'Coating Density [kg/m³]',
+                   'Contents Density [kg/m³]', 'Coating Thickness [mm]', 'Coating Density [kg/m³]', 
+                   'Coating 2 Thickness [mm]', 'Coating 2 Density [kg/m³]',
                    'Liner Thickness [mm]', 'Liner Density [kg/m³]',
                    'Axial Stiffness [kN]',
                    'Bending Stiffness [kN.m²]',
@@ -207,6 +216,8 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
             contents_density = float(dot(self.lineContentsDensity.text()))    # kg/m3
             coating_thickness = float(dot(self.lineCoatingThickness.text()))  # mm
             coating_density = float(dot(self.lineCoatingDensity.text()))      # kg/m3
+            coating2_thickness = float(dot(self.lineCoating2Thickness.text()))  # mm
+            coating2_density = float(dot(self.lineCoating2Density.text()))      # kg/m3
             liner_thickness = float(dot(self.lineLinerThickness.text()))      # mm
             liner_density = float(dot(self.lineLinerDensity.text()))          # kg/m3
         except:
@@ -234,8 +245,8 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
         EA, EI, GJ = self.cross_section(OD, ID, E, v)
         # Weights, all in kg/m
         dry_weight_empty, dry_weight_filled, wet_weight_filled = self.weights(
-              OD, ID, rho, contents_density, coating_thickness,
-              coating_density, liner_thickness, liner_density)
+              OD, ID, rho, contents_density, coating_thickness, coating_density, 
+              coating2_thickness, coating2_density, liner_thickness, liner_density)
         # update output
         self.lineAxialStiffness.setText('{:,.1f}'.format(EA).replace(',', ' '))
         self.lineBendingStiffness.setText('{:,.1f}'.format(EI).replace(',', ' '))
@@ -255,15 +266,17 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
         return EA, EI, GJ
 
     def weights(self, OD, ID, rho, contents_density, coating_thickness, coating_density,
-                liner_thickness, liner_density):
+                coating2_thickness, coating2_density, liner_thickness, liner_density):
         A = pi/4 * (OD**2 - ID**2)                    # mm2, cross sectional area
         steel_weight = A*rho/1e6
         coating_weight = pi/4*((OD+2*coating_thickness)**2-(OD)**2)*coating_density/1e6
+        coating2_weight = pi/4*((OD+2*(coating_thickness+coating2_thickness))**2
+                                 -(OD+2*coating_thickness)**2)*coating2_density/1e6
         liner_weight = pi/4*(ID**2-(ID-2*liner_thickness)**2)*liner_density/1e6
         contents_weight = pi/4*(ID-2*liner_thickness)**2 * contents_density/1e6
-        buoyancy = pi/4*(OD+2*coating_thickness)**2 * 1025/1e6
+        buoyancy = pi/4*(OD+2*(coating_thickness+coating2_thickness))**2 * 1025/1e6
 
-        dry_weight_empty = steel_weight+coating_weight+liner_weight
+        dry_weight_empty = steel_weight+coating_weight+coating2_weight+liner_weight
         dry_weight_filled = dry_weight_empty + contents_weight
         wet_weight_filled = dry_weight_filled - buoyancy
 
@@ -293,7 +306,7 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
         rows = self.table.rowCount()
         columns = self.table.columnCount()
         vals = (508, 457.2, 25.4, 7850, 210, 0.293, 1000)
-        locked_rows = {11, 12, 13, 14, 15, 16}
+        locked_rows = {13, 14, 15, 16, 17, 18}
         for i in range(rows):
             for j in range(columns):
                 item = self.cell(str(vals[i]) if i < len(vals) else '0.0')
@@ -331,12 +344,12 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
                 return True
             except:
                 self.table.setItem(2, col, self.cell('nan'))
-                self.table.setItem(11, col, self.cell('nan', True))
-                self.table.setItem(12, col, self.cell('nan', True))
                 self.table.setItem(13, col, self.cell('nan', True))
                 self.table.setItem(14, col, self.cell('nan', True))
                 self.table.setItem(15, col, self.cell('nan', True))
                 self.table.setItem(16, col, self.cell('nan', True))
+                self.table.setItem(17, col, self.cell('nan', True))
+                self.table.setItem(18, col, self.cell('nan', True))
                 return False
 
         if row in {0, 1, 3, 4, 5, 6, 7, 8, 9, 10}:
@@ -345,12 +358,12 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
                 ID = float(dot(self.table.item(1, col).text()))
             except:
                 self.table.setItem(2, col, self.cell('nan'))
-                self.table.setItem(11, col, self.cell('nan', True))
-                self.table.setItem(12, col, self.cell('nan', True))
                 self.table.setItem(13, col, self.cell('nan', True))
                 self.table.setItem(14, col, self.cell('nan', True))
                 self.table.setItem(15, col, self.cell('nan', True))
                 self.table.setItem(16, col, self.cell('nan', True))
+                self.table.setItem(17, col, self.cell('nan', True))
+                self.table.setItem(18, col, self.cell('nan', True))
                 return False
 
             WT = (OD-ID)/2
@@ -366,38 +379,40 @@ class MyApp(QtGui.QMainWindow, Ui_MainWindow):
                 E = float(dot(self.table.item(4, col).text()))
                 v = float(dot(self.table.item(5, col).text()))
             except:
-                self.table.setItem(11, col, self.cell('nan', True))
-                self.table.setItem(12, col, self.cell('nan', True))
                 self.table.setItem(13, col, self.cell('nan', True))
                 self.table.setItem(14, col, self.cell('nan', True))
                 self.table.setItem(15, col, self.cell('nan', True))
                 self.table.setItem(16, col, self.cell('nan', True))
+                self.table.setItem(17, col, self.cell('nan', True))
+                self.table.setItem(18, col, self.cell('nan', True))
                 return False
 
             EA, EI, GJ = self.cross_section(OD, ID, E, v)
 
-            self.table.setItem(11, col, self.cell('{:,.1f}'.format(EA).replace(',', ' '), True))
-            self.table.setItem(12, col, self.cell('{:,.1f}'.format(EI).replace(',', ' '), True))
-            self.table.setItem(13, col, self.cell('{:,.1f}'.format(GJ).replace(',', ' '), True))
+            self.table.setItem(13, col, self.cell('{:,.1f}'.format(EA).replace(',', ' '), True))
+            self.table.setItem(14, col, self.cell('{:,.1f}'.format(EI).replace(',', ' '), True))
+            self.table.setItem(15, col, self.cell('{:,.1f}'.format(GJ).replace(',', ' '), True))
 
             try:
                 contents_density = float(dot(self.table.item(6, col).text()))    # kg/m3
                 coating_thickness = float(dot(self.table.item(7, col).text()))   # mm
                 coating_density = float(dot(self.table.item(8, col).text()))     # kg/m3
-                liner_thickness = float(dot(self.table.item(9, col).text()))     # mm
-                liner_density = float(dot(self.table.item(10, col).text()))      # kg/m3
+                coating2_thickness = float(dot(self.table.item(9, col).text()))   # mm
+                coating2_density = float(dot(self.table.item(10, col).text()))     # kg/m3
+                liner_thickness = float(dot(self.table.item(11, col).text()))     # mm
+                liner_density = float(dot(self.table.item(12, col).text()))      # kg/m3
             except:
-                self.table.setItem(14, col, self.cell('nan', True))
-                self.table.setItem(15, col, self.cell('nan', True))
                 self.table.setItem(16, col, self.cell('nan', True))
+                self.table.setItem(17, col, self.cell('nan', True))
+                self.table.setItem(18, col, self.cell('nan', True))
                 return False
 
             dry_weight_empty, dry_weight_filled, wet_weight_filled = self.weights(
                         OD, ID, rho, contents_density, coating_thickness, coating_density,
-                        liner_thickness, liner_density)
-            self.table.setItem(14, col, self.cell('%.3f' % dry_weight_empty, True))
-            self.table.setItem(15, col, self.cell('%.3f' % dry_weight_filled, True))
-            self.table.setItem(16, col, self.cell('%.3f' % wet_weight_filled, True))
+                        coating2_thickness, coating2_density, liner_thickness, liner_density)
+            self.table.setItem(16, col, self.cell('%.3f' % dry_weight_empty, True))
+            self.table.setItem(17, col, self.cell('%.3f' % dry_weight_filled, True))
+            self.table.setItem(18, col, self.cell('%.3f' % wet_weight_filled, True))
 
             return True
 
