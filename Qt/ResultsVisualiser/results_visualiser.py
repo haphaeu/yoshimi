@@ -43,6 +43,7 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
         self.radio_min.toggled.connect(self.check_state)
         self.radio_max.toggled.connect(self.check_state)
         self.checkBoxLegend.toggled.connect(self.check_state)
+        self.checkBoxFit.toggled.connect(self.check_state)
 
     def resizeEvent(self, event):
         if _debug: print('resize event called - w=', self.width(), 'h=', self.height())
@@ -51,12 +52,17 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
     def open_file(self):
         if _debug: print('open_file called')
         fname = QtGui.QFileDialog.getOpenFileName(self, 'OpenFile')
-        self.results.load(fname)
+        err = self.results.load(fname)
+
         if _debug: print('clearing lists')
         self.listHs.clear()
         self.listTp.clear()
         self.listHeading.clear()
         self.comboBox.clear()
+        
+        if err:
+            self.showDialogLoadError(err)
+            return
         if _debug: print('filling lists')
         self.listHs.addItems(self.results.get_hs_list())
         self.listHs.setCurrentRow(0)
@@ -114,7 +120,10 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
             sample = self.results.get_sample(var, hs, tp, wd)
             if not sample.empty:
                 hasData = True
-                self.ax.plot(sample, y, next(marker), label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
+                mark = next(marker)
+                self.ax.plot(sample, y, mark, label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
+                if self.checkBoxFit.isChecked() and self.radio_log.isChecked():
+                    self.ax.plot(*ResultsLoader.fit(sample, y), '-'+mark[1])
         if hasData:
             self.adjust_n_draw_canvas()
 
@@ -134,12 +143,18 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
             self.mpl.canvas.fig.tight_layout(rect=(0, 0, 1, pad_top))  # left, bottom, right, top
             self.mpl.canvas.draw()
 
-    def load_res_dummy(self, wd):
-        import pandas as pd
-        df = pd.read_table("Results.txt", sep='\t')
-        sample = df[(df['WaveHs'] == 3.0) & (df['WaveTp'] == 6.0) & 
-                    (df['WaveDirection'] == wd)]['Link1 Max Tension']
-        return sample.sort_values(), range(len(sample))
+    def showDialogLoadError(self, errors):
+       msg = QtGui.QMessageBox()
+       msg.setIcon(QtGui.QMessageBox.Critical)
+       msg.setText("Error found during loading of file.")
+       msg.setInformativeText("Check the format of the input file.")
+       msg.setWindowTitle("Error")
+       err_msg = ''
+       for i in errors:
+           err_msg += i + '\n'
+       msg.setDetailedText(err_msg)
+       msg.setStandardButtons(QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
+       retval = msg.exec_()
 
 def plot_marker_style():
         # shapes and colors for plot
