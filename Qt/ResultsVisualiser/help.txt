@@ -1,0 +1,19 @@
+Results Visualiser
+
+This application imports data from rlc (repeated lowering control) module and plot samples for the available sea states.
+
+This is a quick, messy and lazy help for the app =^)
+
+===
+
+File->Open... 
+Select a results file from a lifting analysis using rlc, typically called 'Results.txt'. 
+
+Edit->Copy
+The current plot is copied into the clipboard. Note that the plot can also be saved to file using the toolbar under the plot.
+
+Multiple sea states can be selectedat a time. Note that the list of Tp depends on the selected Hs.
+
+Fit is a best line fit to the sample using least squares method. Only show when y-axis is log-log.
+
+The rest should be straightforward...

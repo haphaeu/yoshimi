@@ -13,7 +13,6 @@ from itertools import cycle as iter_cycle
 
 from results_visualiser_ui import Ui_MainWindow
 from results_loader import ResultsLoader
-
 _debug = True
 
 class Window(QtGui.QMainWindow, Ui_MainWindow):
@@ -31,10 +30,14 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
         self.listHs.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.listTp.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.listHeading.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
-        
+
         # connect the signals with the slots
-        self.comboBox.currentIndexChanged .connect(self.selectionChangedVariable)
         self.actionOpen.triggered.connect(self.open_file)
+        self.actionExit.triggered.connect(self.close)
+        self.actionCopy.triggered.connect(self.copy)
+        self.actionHelp.triggered.connect(self.help)
+        self.actionAbout.triggered.connect(self.about)
+        self.comboBox.currentIndexChanged .connect(self.selectionChangedVariable)
         self.listHs.itemSelectionChanged.connect(self.selectionChangedHs)
         self.listTp.itemSelectionChanged.connect(self.check_state)
         self.listHeading.itemSelectionChanged.connect(self.check_state)
@@ -52,6 +55,8 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
     def open_file(self):
         if _debug: print('open_file called')
         fname = QtGui.QFileDialog.getOpenFileName(self, 'OpenFile')
+        if not fname:
+            return
         err = self.results.load(fname)
 
         if _debug: print('clearing lists')
@@ -70,6 +75,22 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
         self.listHeading.setCurrentRow(0)
         self.comboBox.addItems(self.results.get_vars())
 
+    def copy(self):
+        pixmap = QtGui.QPixmap.grabWidget(self.mpl.canvas)
+        app.clipboard().setPixmap(pixmap)
+    
+    def help(self):
+        try:
+            with open('help.txt') as pf:
+                msg = pf.read()
+        except:
+            msg = 'help file not found'
+        finally:
+            QtGui.QMessageBox.about(self, "Results Visualiser Help", msg)
+
+    def about(self):
+        QtGui.QMessageBox.about(self, "About", "TechnipFMC - Norway & Russia\nHydro Analysis Discipline\nStavanger")
+    
     def check_state(self):
         if _debug: print('check_state called')
         self.isReady2Plot = False
