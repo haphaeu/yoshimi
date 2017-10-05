@@ -49,6 +49,7 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
         self.checkBoxLegend.toggled.connect(self.check_state)
         self.checkBoxFit.toggled.connect(self.check_state)
         self.checkBoxCI.toggled.connect(self.check_state)
+        self.checkBoxErr.toggled.connect(self.check_state)
 
     def resizeEvent(self, event):
         if _debug: print('resize event called - w=', self.width(), 'h=', self.height())
@@ -148,16 +149,19 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
                 plotCounter += 1
                 hasData = True
                 mark = next(marker)
-                if not self.checkBoxCI.isChecked():
+                if not self.checkBoxErr.isChecked():
+                    # scatter only
                     self.ax.plot(sample, y, mark, label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
-                elif plotCounter < 4:
-                    self.ax.plot(sample, y, mark, label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
+                else:
+                    # scatter + error bars
+                    err = cib.confidence_interval(sample)
+                    self.ax.errorbar(sample, y, fmt=mark, xerr=(-err[0], err[1]),
+                                     ecolor='gray', label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
+                if self.checkBoxCI.isChecked() and plotCounter < 4:
+                    # confidence interval lines
                     self.ax.plot(*cib.fit_ci_gumbel(sample, tail=tail), '-'+mark[1])
-                    # error bars
-                    #err = cib.confidence_interval(sample)
-                    #self.ax.errorbar(sample, y, fmt=mark, xerr=(-err[0], err[1]),
-                    #                 ecolor='gray', label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
                 if self.checkBoxFit.isChecked() and self.radio_log.isChecked():
+                    # best fit line
                     self.ax.plot(*ResultsLoader.fit(sample, y), '-'+mark[1])
         if hasData:
             self.adjust_n_draw_canvas()

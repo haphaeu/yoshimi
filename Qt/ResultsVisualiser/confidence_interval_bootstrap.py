@@ -18,11 +18,8 @@ import math
 import numpy as np
 from scipy import stats as ss
 from matplotlib import pyplot as plt
+import quantilelib as ql
 plt.rcParams['figure.figsize'] = 10, 5
-
-# Seed for the random generator used in the resample function.
-#
-_random_seed = 12343
 
 #
 # This entire block has been deprecated and these specific ci function replaced by a generic one
@@ -126,7 +123,8 @@ _random_seed = 12343
 #    return delta_star[ci_idx] + (0 if relative else m)
 
 
-def confidence_interval(sample, fstats, ci=0.95, repeat=1000, relative=True, fargs=[], fkwargs={}):
+def confidence_interval(sample, fstats=np.sort, ci=0.95, repeat=1000, relative=True,
+                        random_seed = 12343, fargs=[], fkwargs={}):
     """Returns the lower and upper confidence intervals of a statistic of a sample. The intervals
     can be relative or absolute, i.e:
 
@@ -161,7 +159,7 @@ def confidence_interval(sample, fstats, ci=0.95, repeat=1000, relative=True, far
 
     m = fstats(sample)
     m_star = np.zeros(shape=(repeat, 1 if not hasattr(m, '__len__') else len(m)))
-    np.random.seed(_random_seed)
+    np.random.seed(random_seed)
     for i in range(repeat):
         m_star[i] = fstats(resample(sample))  # re-sampling with replacement
     delta_star = m_star - m
@@ -197,11 +195,14 @@ def resample(sample, size=False, replacement=True):
         return sample[idx[:size]]
 
 
+# ### @ Deprecated ###
+# Use quantilelib instead
 def cdf(size):
     """Returns the CDF for a t-distribution"""
     return np.linspace(0.5/size, (size-0.5)/size, size)
 
-
+# ### @ Deprecated ###
+# Use quantilelib instead
 def llcdf(size):
     """Returns the -log(-log(CDF)) for a t-distribution"""
     return -np.log(-np.log(cdf(size)))
@@ -211,6 +212,8 @@ def fit_ci_gumbel(sample, ci=0.95, nboots=100, tail='upper', fit='MLE'):
     """Returns the best fit and confidence intervals for sample assuming Gumbel distribution.
     Returns are ready to plot using plot(*fit_points(sample))
     """
+    sz = len(sample)
+
     if tail == 'upper':
         gumbel = ss.gumbel_r
     else:
@@ -220,16 +223,44 @@ def fit_ci_gumbel(sample, ci=0.95, nboots=100, tail='upper', fit='MLE'):
     else:
         gumbel.ft = gumbel.fit
 
-    sz = len(sample)
-    y = llcdf(sz)[np.array((0, -1))]
-    params = gumbel.fit(sample)
-    params_ci = confidence_interval(sample, gumbel.fit, ci=ci, repeat=nboots, relative=False)
-    x = np.array([gumbel(*p).ppf(np.exp(-np.exp(-y)))
-                 for p in (params, *params_ci)]).transpose()
-    if tail == 'lower':
-        y = np.flipud(y)
+    params = gumbel.ft(sample)
+    params_ci = confidence_interval(sample, gumbel.ft, ci=ci, repeat=nboots, relative=False)
+
+    x = sample.min(), sample.max()
+    if tail == 'upper':
+        y = np.array([-np.log(-gumbel(*p).logcdf(x)) for p in (params, *params_ci)]).transpose()
+    else:
+        # For a negative slope, we need to swap around the scale parameters
+        _ = params_ci[0, 1]
+        params_ci[0, 1] = params_ci[1, 1]
+        params_ci[1, 1] = _
+        y = np.array([-np.log(-gumbel(*p).logsf(x)) for p in (params, *params_ci)]).transpose()
     return x, y
 
+
+def fit_ci_weibull(sample, ci=0.95, nboots=100, tail='upper', fit='MLE'):
+    """Returns the best fit and confidence intervals for sample assuming Gumbel distribution.
+    Returns are ready to plot using plot(*fit_points(sample))
+    """
+    sz = len(sample)
+
+    def mw(sample):
+        p = ss.weibull_max.fit(sample, floc=0)
+        return p[0], p[2]
+
+    params = mw(sample)
+    params_ci = confidence_interval(sample, mw, ci=ci, repeat=nboots, relative=False)
+
+    x = sample.min(), sample.max()
+    if tail == 'upper':
+        y = np.array([weibull(*p).logcdf(x) for p in (params, *params_ci)]).transpose()
+    else:
+        # For a negative slope, we need to swap around the scale parameters
+        _ = params_ci[0, 1]
+        params_ci[0, 1] = params_ci[1, 1]
+        params_ci[1, 1] = _
+        y = np.array([ss.weibull_max(*p).logsf(x) for p in (params, *params_ci)]).transpose()
+    return x, y
 # ################################################################################################
 # ### tests ###################################
 # ################
@@ -281,6 +312,24 @@ def test_model_ci():
     plt.grid()
     plt.show()
 
+def test_model_ci_w():
+    """
+    Simple test to draw confidence interval of the fitted model.
+    """
+    ssz = 100
+    sample = ss.weibull_max.rvs(size=ssz, c=1.6, scale=33)
+
+    ci, nboots = 0.95, 100
+    y = np.log(cdf(ssz))
+    sample.sort()
+    plt.plot(sample, y, 'o')
+    plt.plot(*fit_ci_weibull(sample, ci=ci, nboots=nboots))
+    plt.title('%d%% Confidence Intervals - '
+              'Sample size %d - Bootstrap %d samples' % (100*ci, ssz, nboots))
+    plt.xlabel('Variate')
+    plt.ylabel('-ln(-ln(cdf))')
+    plt.grid()
+    plt.show()
 
 def test_true():
     """
@@ -425,4 +474,4 @@ def test_true2():
 #print('test_true2()')
 #for i in range(10):
 #    test_true2()
-#test_model_ci()
+test_model_ci_w()
