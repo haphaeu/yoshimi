@@ -267,20 +267,11 @@ def test_model_ci():
     ssz = 50
     sample = ss.gumbel_r.rvs(size=ssz, loc=100, scale=3)
 
-    params = ss.gumbel_r.fit(sample)
     ci, nboots = 0.95, 100
-    params_ci = confidence_interval(sample, ss.gumbel_r.fit, ci=ci, repeat=nboots, relative=False)
-    print(params, '\n', params_ci)
-
     y = llcdf(ssz)
     sample.sort()
     plt.plot(sample, y, 'o')
-    plt.plot(ss.gumbel_r(*params).ppf( np.exp(-np.exp(-y[np.array((0, -1))]))),
-             y[np.array((0, -1))], 'b')
-    plt.plot(ss.gumbel_r(*params_ci[0]).ppf( np.exp(-np.exp(-y[np.array((0, -1))]))),
-             y[np.array((0, -1))], 'g')
-    plt.plot(ss.gumbel_r(*params_ci[1]).ppf( np.exp(-np.exp(-y[np.array((0, -1))]))),
-             y[np.array((0, -1))], 'r')
+    plt.plot(*fit_ci_gumbel(sample, ci=ci, nboots=nboots))
     plt.title('%d%% Confidence Intervals - '
               'Sample size %d - Bootstrap %d samples' % (100*ci, ssz, nboots))
     plt.xlabel('Variate')

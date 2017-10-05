@@ -17,7 +17,7 @@ from results_loader import ResultsLoader
 _debug = True
 
 class Window(QtGui.QMainWindow, Ui_MainWindow):
-    
+
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
@@ -66,7 +66,7 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
         self.listTp.clear()
         self.listHeading.clear()
         self.comboBox.clear()
-        
+
         if err:
             self.showDialogLoadError(err)
             return
@@ -80,7 +80,7 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
     def copy(self):
         pixmap = QtGui.QPixmap.grabWidget(self.mpl.canvas)
         app.clipboard().setPixmap(pixmap)
-    
+
     def help(self):
         try:
             with open('help.txt') as pf:
@@ -92,7 +92,7 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
 
     def about(self):
         QtGui.QMessageBox.about(self, "About", "TechnipFMC - Norway & Russia\nHydro Analysis Discipline\nStavanger")
-    
+
     def check_state(self):
         if _debug: print('check_state called')
         self.isReady2Plot = False
@@ -131,25 +131,32 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
         self.ax.clear()
         var = self.comboBox.currentText()
         y = list(self.results.llcdf if self.radio_log.isChecked() else self.results.cdf)
+        tail = 'upper'
         if self.radio_min.isChecked():
             y.reverse()
+            tail = 'lower'
         # shapes and colors for plot
         marker = plot_marker_style()
         hasData = False
+        plotCounter = 0
         for hs, tp, wd in iter_product(
                           [float(x.text()) for x in self.listHs.selectedItems()],
                           [float(x.text()) for x in self.listTp.selectedItems()],
                           [float(x.text()) for x in self.listHeading.selectedItems()]):
             sample = self.results.get_sample(var, hs, tp, wd)
             if not sample.empty:
+                plotCounter += 1
                 hasData = True
                 mark = next(marker)
                 if not self.checkBoxCI.isChecked():
                     self.ax.plot(sample, y, mark, label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
-                else:
-                    err = cib.confidence_interval(sample)
-                    self.ax.errorbar(sample, y, fmt=mark, xerr=(-err[0], err[1]),
-                                     ecolor='gray', label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
+                elif plotCounter < 4:
+                    self.ax.plot(sample, y, mark, label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
+                    self.ax.plot(*cib.fit_ci_gumbel(sample, tail=tail), '-'+mark[1])
+                    # error bars
+                    #err = cib.confidence_interval(sample)
+                    #self.ax.errorbar(sample, y, fmt=mark, xerr=(-err[0], err[1]),
+                    #                 ecolor='gray', label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
                 if self.checkBoxFit.isChecked() and self.radio_log.isChecked():
                     self.ax.plot(*ResultsLoader.fit(sample, y), '-'+mark[1])
         if hasData:
@@ -160,7 +167,7 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
             self.ax.get_xaxis().grid(True)
             numitems = len(list(self.ax._get_legend_handles()))
             pad_top = 1
-            if numitems and self.checkBoxLegend.isChecked(): 
+            if numitems and self.checkBoxLegend.isChecked():
                 # trying to adjust the size of the legend and the plot to something reasonable
                 ncols = math.ceil(self.mpl.canvas.width()/150)  # 150 px assumed size of one label
                 nrows = math.ceil(numitems/ncols)
