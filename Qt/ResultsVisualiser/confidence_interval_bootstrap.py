@@ -16,126 +16,18 @@ Created on Thu Sep 28 15:26:26 2017
 """
 import math
 import numpy as np
-from scipy import stats as ss
-from matplotlib import pyplot as plt
-plt.rcParams['figure.figsize'] = 10, 5
+
 
 # Seed for the random generator used in the resample function.
 #
 _random_seed = 12343
 
-#
-# This entire block has been deprecated and these specific ci function replaced by a generic one
-#
-## ### @Deprecated ###
-#def confidence_interval(sample, ci=0.95, repeat=1000, relative=True):
-#    """
-#    ##########
-#    Deprecated
-#    ##########
-#
-#    Returns the lower and upper confidence intervals of a sample. The intervals can be
-#    relative or absolute, i.e: absolute = sample + relative
-#
-#    The returned array has shape (2, len(sample)).
-#
-#    The interval is calculated for a 100*ci % confidence level.
-#
-#    Bootstrapping technique is used for the calculation of the intervals, using a sorted resampling
-#    with replacement.
-#
-#    Arguments:
-#        sample      : array with the sample values
-#        ci          : confidence level of the interval
-#        repeat      : bootstrap size
-#        relative    : set to True for relative intervals, False for absolute intervals, i.e.,
-#                      absolute intervals = sample + relative_intervals.
-#                      relative intervals can be seen as tolerances to sample values, while
-#                      absolute intervals are lower and upper bounds for the variate values.
-#    """
-#    if not isinstance(sample, np.ndarray):
-#            sample = np.array(sample, dtype='float64')
-#    try:
-#        sample.sort()
-#    except (TypeError, ValueError):
-#        print('Error: sample must be an iterable.')
-#        return
-#
-#    size = len(sample)
-#    m_star = np.zeros(shape=(repeat, size))
-#    np.random.seed(_random_seed)
-#    for i in range(repeat):
-#        m_star[i] = resample(sample)  # re-sampling with replacement
-#        m_star[i].sort()
-#    delta_star = m_star - sample
-#    delta_star.sort(axis=0)
-#    ci_idx = np.array([math.floor((1.0 - ci)/2*repeat), math.ceil(repeat - (1.0 - ci)/2*repeat)])
-#    return delta_star[ci_idx] + (0 if relative else sample)
-#
-#
-## ### @Deprecated ###
-#def confidence_interval_gumbel(sample, ci=0.95, repeat=1000, relative=True,
-#                               tail='upper', fit='MLE'):
-#    """
-#    ##########
-#    Deprecated
-#    ##########
-#
-#    Returns the lower and upper confidence intervals of the parameters of a Gumbel model for
-#    the sample. The intervals can be relative or absolute, i.e:
-#
-#        absolute ci = sample statistics + relative ci
-#
-#    The returned array has shape (2, 2).
-#
-#    The interval is calculated for a 100*ci % confidence level.
-#
-#    Bootstrapping technique is used for the calculation of the intervals, using a sorted resampling
-#    with replacement.
-#
-#    Arguments:
-#        sample      : array with the sample values
-#        ci          : confidence level of the interval
-#        repeat      : bootstrap size
-#        tail        : 'upper' for maxima, 'lower' for minima
-#        fit         : 'MLE' or 'ME'
-#        relative    : set to True for relative intervals, False for absolute intervals, i.e.,
-#                      absolute ci = sample statistics + relative ci
-#                      relative intervals can be seen as tolerances to sample statistics, while
-#                      absolute intervals are lower and upper bounds for the statistics.
-#    """
-#    if not isinstance(sample, np.ndarray):
-#            sample = np.array(sample, dtype='float64')
-#
-#    if   tail == 'upper' and fit == 'MLE': gfunc = ss.gumbel_r.fit
-#    elif tail == 'lower' and fit == 'MLE': gfunc = ss.gumbel_l.fit
-#    elif tail == 'upper' and fit == 'ME': gfunc = ss.gumbel_r._fitstart
-#    elif tail == 'lower' and fit == 'ME': gfunc = ss.gumbel_l._fitstart
-#    else:
-#        print('Error in arguments "tail" or "fit".')
-#        return
-#
-#    m = gfunc(sample)
-#    m_star = np.zeros(shape=(repeat, 2))
-#    np.random.seed(_random_seed)
-#    for i in range(repeat):
-#        m_star[i] = gfunc(resample(sample))  # re-sampling with replacement
-#    delta_star = m_star - m
-#    delta_star.sort(axis=0)
-#    ci_idx = np.array([math.floor((1.0 - ci)/2*repeat), math.ceil(repeat - (1.0 - ci)/2*repeat)])
-#    return delta_star[ci_idx] + (0 if relative else m)
 
+def confidence_interval(sample, ci=0.95, repeat=1000, relative=True):
+    """Returns the lower and upper confidence intervals of a sample. The intervals can be
+    relative or absolute, i.e: absolute = sample + relative
 
-def confidence_interval(sample, fstats, ci=0.95, repeat=1000, relative=True, fargs=[], fkwargs={}):
-    """Returns the lower and upper confidence intervals of a statistic of a sample. The intervals
-    can be relative or absolute, i.e:
-
-        absolute ci = sample statistics + relative ci
-
-    The statistics to be calculated for the sample is passed as a function that takes the sample
-    as first argument. Additional positional arguments can be passed using fargs and fkwargs.
-
-    The returned array has shape (2, len(fstats(sample))).
+    The returned array has shape (2, len(sample)).
 
     The interval is calculated for a 100*ci % confidence level.
 
@@ -144,30 +36,31 @@ def confidence_interval(sample, fstats, ci=0.95, repeat=1000, relative=True, far
 
     Arguments:
         sample      : array with the sample values
-        fstats      : function used to calculate sample statistics
         ci          : confidence level of the interval
         repeat      : bootstrap size
         relative    : set to True for relative intervals, False for absolute intervals, i.e.,
-                      absolute ci = sample statistics + relative ci
-                      relative intervals can be seen as tolerances to sample statistics, while
-                      absolute intervals are lower and upper bounds for the statistics.
-        fargs       : optional. list with additional positional arguments for fstats.
-        fkwargs     : optional. dictionary with additional key word arguments for fstats.
+                      absolute intervals = sample + relative_intervals.
+                      relative intervals can be seen as tolerances to sample values, while
+                      absolute intervals are lower and upper bounds for the variate values.
     """
     if not isinstance(sample, np.ndarray):
             sample = np.array(sample, dtype='float64')
+    try:
+        sample.sort()
+    except (TypeError, ValueError):
+        print('Error: sample must be an iterable.')
+        return
 
-    assert callable(fstats), "Error: fstats must be a function."
-
-    m = fstats(sample)
-    m_star = np.zeros(shape=(repeat, 1 if not hasattr(m, '__len__') else len(m)))
+    size = len(sample)
+    m_star = np.zeros(shape=(repeat, size))
     np.random.seed(_random_seed)
     for i in range(repeat):
-        m_star[i] = fstats(resample(sample))  # re-sampling with replacement
-    delta_star = m_star - m
+        m_star[i] = resample(sample)  # re-sampling with replacement
+        m_star[i].sort()
+    delta_star = m_star - sample
     delta_star.sort(axis=0)
     ci_idx = np.array([math.floor((1.0 - ci)/2*repeat), math.ceil(repeat - (1.0 - ci)/2*repeat)])
-    return delta_star[ci_idx] + (0 if relative else m)
+    return delta_star[ci_idx] + (0 if relative else sample)
 
 
 def resample(sample, size=False, replacement=True):
@@ -207,27 +100,6 @@ def llcdf(size):
     return -np.log(-np.log(cdf(size)))
 
 
-def fit_ci_gumbel(sample, ci=0.95, nboots=100, tail='upper', fit='MLE'):
-    """Returns the best fit and confidence intervals for sample assuming Gumbel distribution.
-    Returns are ready to plot using plot(*fit_points(sample))
-    """
-    if tail == 'upper':
-        gumbel = ss.gumbel_r
-    else:
-        gumbel = ss.gumbel_l
-    if fit == 'ME':
-        gumbel.ft = gumbel._fitstart
-    else:
-        gumbel.ft = gumbel.fit
-
-    sz = len(sample)
-    y = llcdf(sz)[np.array((0, -1))]
-    params = gumbel.fit(sample)
-    params_ci = confidence_interval(sample, gumbel.fit, ci=ci, repeat=nboots, relative=False)
-    x = np.array([gumbel(*p).ppf(np.exp(-np.exp(-y)))
-                 for p in (params, *params_ci)]).transpose()
-    return x, y
-
 # ################################################################################################
 # ### tests ###################################
 # ################
@@ -242,14 +114,18 @@ def test_simple():
     Creates a Gumbel distributed random sample, calculate the confidence interval for each
     item in the sample and show as error bars in a sample x log(log(cdf)) plot.
     """
+    from scipy import stats as ss
+    from matplotlib import pyplot as plt
+    plt.rcParams['figure.figsize'] = 10, 5
+    
     ssz = 50
     sample = ss.gumbel_r.rvs(size=ssz, loc=100, scale=3)
     # sample = np.random.randint(1, 50, size=ssz)
     sample.sort()
     ci, nboots = 0.95, 1000
-    err = confidence_interval(sample, np.sort, ci, nboots)
+    err = confidence_interval(sample, ci, nboots)
     y = llcdf(ssz)
-    print(err)
+
     plt.errorbar(sample, y, fmt='o', xerr=(-err[0], err[1]), ecolor='gray')
     plt.title('%d%% Confidence Intervals - Seeds %d\nBootstrapping %d samples' %
               (100*ci, ssz, nboots))
@@ -257,35 +133,6 @@ def test_simple():
     plt.ylabel('-ln(-ln(cdf))')
     plt.grid()
     if not _plot: plt.close()
-    plt.show()
-
-
-def test_model_ci():
-    """
-    Simple test to draw confidence interval of the fitted model.
-    """
-    ssz = 50
-    sample = ss.gumbel_r.rvs(size=ssz, loc=100, scale=3)
-
-    params = ss.gumbel_r.fit(sample)
-    ci, nboots = 0.95, 100
-    params_ci = confidence_interval(sample, ss.gumbel_r.fit, ci=ci, repeat=nboots, relative=False)
-    print(params, '\n', params_ci)
-
-    y = llcdf(ssz)
-    sample.sort()
-    plt.plot(sample, y, 'o')
-    plt.plot(ss.gumbel_r(*params).ppf( np.exp(-np.exp(-y[np.array((0, -1))]))),
-             y[np.array((0, -1))], 'b')
-    plt.plot(ss.gumbel_r(*params_ci[0]).ppf( np.exp(-np.exp(-y[np.array((0, -1))]))),
-             y[np.array((0, -1))], 'g')
-    plt.plot(ss.gumbel_r(*params_ci[1]).ppf( np.exp(-np.exp(-y[np.array((0, -1))]))),
-             y[np.array((0, -1))], 'r')
-    plt.title('%d%% Confidence Intervals - '
-              'Sample size %d - Bootstrap %d samples' % (100*ci, ssz, nboots))
-    plt.xlabel('Variate')
-    plt.ylabel('-ln(-ln(cdf))')
-    plt.grid()
     plt.show()
 
 
@@ -314,8 +161,10 @@ def test_true():
     5. Calculate statistics on the saved P90 intervals, like show lower and upper bounds and
        the 90% intervals, i.e., the 90% interval of the 95% intervals of P90.
     """
-    global _random_seed
-
+    from scipy import stats as ss
+    from matplotlib import pyplot as plt
+    plt.rcParams['figure.figsize'] = 10, 5
+    
     # Sample size
     ssz = 50
 
@@ -330,7 +179,7 @@ def test_true():
 
     # Number of trials to repeat the bootstrap and to calculate the
     # confidence interval of the confidence intervals
-    trials = 50
+    trials = 20
 
     assert psz > ssz, "Population size must be larger than sample size."
     assert 1/(1-p_target) < ssz, "Sample size not large enough for target percentile."
@@ -347,8 +196,7 @@ def test_true():
     for i in range(trials):
         sample = resample(population, ssz, replacement=False)
         sample.sort()
-        _random_seed = np.random.randint(1, 123456)
-        err = confidence_interval(sample, np.sort, ci, nboots)
+        err = confidence_interval(sample, ci, nboots)
         x_target_trials[i] = (sample+err)[:, idx_p_target]
         plt.errorbar(sample, y, fmt='o', xerr=(-err[0], err[1]), ecolor='gray')
     plt.title('%d%% Confidence Intervals - Population %d - '
@@ -374,8 +222,10 @@ def test_true2():
     This is the same here, but using confidence_interval() again for the returned confidence
     interval.
     """
-    global _random_seed
-
+    from scipy import stats as ss
+    from matplotlib import pyplot as plt
+    plt.rcParams['figure.figsize'] = 10, 5
+    
     # Sample size
     ssz = 50
 
@@ -390,7 +240,7 @@ def test_true2():
 
     # Number of trials to repeat the bootstrap and to calculate the
     # confidence interval of the confidence intervals
-    trials = 50
+    trials = 20
 
     assert psz > ssz, "Population size must be larger than sample size."
     assert 1/(1-p_target) < ssz, "Sample size not large enough for target percentile."
@@ -405,8 +255,7 @@ def test_true2():
     for i in range(trials):
         sample = resample(population, ssz, replacement=False)
         sample.sort()
-        _random_seed = np.random.randint(1, 123456)
-        err = confidence_interval(sample, np.sort, ci, nboots)
+        err = confidence_interval(sample, ci, nboots)
         x_target_trials[i] = (sample+err)[:, idx_p_target]
         plt.errorbar(sample, y, fmt='o', xerr=(-err[0], err[1]), ecolor='gray')
     plt.title('%d%% Confidence Intervals - Population %d - '
@@ -418,18 +267,8 @@ def test_true2():
     plt.show()
     lower = x_target_trials[:, 0]
     upper = x_target_trials[:, 1]
-    err_lower = confidence_interval(lower, np.sort, ci=cici, relative=False)
-    err_upper = confidence_interval(upper, np.sort, ci=cici, relative=False)
+    err_lower = confidence_interval(lower, ci=cici)
+    err_upper = confidence_interval(upper, ci=cici)
     ilow, iup = int(np.floor((1-cici)/2*trials)), int(np.ceil((cici+(1-cici)/2)*trials))
     print('%d %% Interval of the %d %% interval of P%d: %.2f - %.2f' %
-          (100*cici, 100*ci, 100*p_target, err_lower[0, ilow], err_upper[1, iup]))
-
-
-#test_simple()
-#print('test_true()')
-#for i in range(10):
-#    test_true()
-#print('test_true2()')
-#for i in range(10):
-#    test_true2()
-test_model_ci()
+          (100*cici, 100*ci, 100*p_target, lower[ilow], upper[iup]))

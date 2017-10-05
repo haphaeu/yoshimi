@@ -10,6 +10,7 @@ import math
 from PyQt4 import QtGui, QtCore
 from itertools import product as iter_product
 from itertools import cycle as iter_cycle
+import confidence_interval_bootstrap as cib
 
 from results_visualiser_ui import Ui_MainWindow
 from results_loader import ResultsLoader
@@ -47,6 +48,7 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
         self.radio_max.toggled.connect(self.check_state)
         self.checkBoxLegend.toggled.connect(self.check_state)
         self.checkBoxFit.toggled.connect(self.check_state)
+        self.checkBoxCI.toggled.connect(self.check_state)
 
     def resizeEvent(self, event):
         if _debug: print('resize event called - w=', self.width(), 'h=', self.height())
@@ -142,7 +144,12 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
             if not sample.empty:
                 hasData = True
                 mark = next(marker)
-                self.ax.plot(sample, y, mark, label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
+                if not self.checkBoxCI.isChecked():
+                    self.ax.plot(sample, y, mark, label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
+                else:
+                    err = cib.confidence_interval(sample)
+                    self.ax.errorbar(sample, y, fmt=mark, xerr=(-err[0], err[1]),
+                                     ecolor='gray', label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
                 if self.checkBoxFit.isChecked() and self.radio_log.isChecked():
                     self.ax.plot(*ResultsLoader.fit(sample, y), '-'+mark[1])
         if hasData:

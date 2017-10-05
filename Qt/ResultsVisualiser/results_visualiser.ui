@@ -146,6 +146,13 @@
         </item>
         <item row="3" column="1">
          <layout class="QGridLayout" name="gridLayout_2">
+          <item row="3" column="0">
+           <widget class="QCheckBox" name="checkBoxFit">
+            <property name="text">
+             <string>Fit</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="0">
            <widget class="QLabel" name="label_5">
             <property name="sizePolicy">
@@ -228,10 +235,10 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QCheckBox" name="checkBoxFit">
+          <item row="4" column="0">
+           <widget class="QCheckBox" name="checkBoxCI">
             <property name="text">
-             <string>Fit</string>
+             <string>0.95 ci</string>
             </property>
            </widget>
           </item>
