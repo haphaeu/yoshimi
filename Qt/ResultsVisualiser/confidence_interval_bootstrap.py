@@ -208,7 +208,7 @@ def llcdf(size):
     return -np.log(-np.log(cdf(size)))
 
 
-def fit_ci_gumbel(sample, ci=0.95, nboots=100, tail='upper', fit='MLE'):
+def fit_ci_gumbel(sample, ci=0.95, repeat=100, tail='upper', fit='MLE'):
     """Returns the best fit and confidence intervals for sample assuming Gumbel distribution.
     Returns are ready to plot using plot(*fit_points(sample))
     """
@@ -224,7 +224,7 @@ def fit_ci_gumbel(sample, ci=0.95, nboots=100, tail='upper', fit='MLE'):
         gumbel.ft = gumbel.fit
 
     params = gumbel.ft(sample)
-    params_ci = confidence_interval(sample, gumbel.ft, ci=ci, repeat=nboots, relative=False)
+    params_ci = confidence_interval(sample, gumbel.ft, ci=ci, repeat=repeat, relative=False)
 
     x = sample.min(), sample.max()
     if tail == 'upper':
@@ -474,4 +474,4 @@ def test_true2():
 #print('test_true2()')
 #for i in range(10):
 #    test_true2()
-test_model_ci_w()
+#test_model_ci_w()
