@@ -123,6 +123,12 @@ for var, seast in itertools.product(variables, seastates):
     rci = np.array(rstats.confint(rfit)).transpose()
     rfit = tuple(rfit[0])
 
+    # ATTENTION HERE
+    # Last time run I'M SURE R returned (loc, scale), but now it seems to be returning (scale, loc)
+    # Therefore I'm flipping it around to match output of cib...
+    rfit = tuple(np.flipud(rfit))
+    rci = np.fliplr(rci)
+
     #  R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R
     # R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R R
 
@@ -174,6 +180,6 @@ for var, seast in itertools.product(variables, seastates):
     plt.title('{} - Hs {} - Tp {} - wd {}'.format(var, hs, tp, wd))
     plt.legend(loc='best')
     plt.grid()
-    # plt.show()
     plt.savefig(r'R_in_py\{}-Hs{}-Tp{}-wd{}.png'.format(var, hs, tp, wd))
+    plt.show()
     plt.close()
