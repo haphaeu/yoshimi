@@ -423,7 +423,17 @@ def dot(var):
 
 
 if __name__ == "__main__":
+
+    # this crap below is required to get icon in windows taskbar...
+    try:
+        import ctypes
+        myappid = u'raf.pipeproperties'  # arbitrary string
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    except:
+        pass  # ... and still need to work on other platforms.
+
     app = QtGui.QApplication(sys.argv)
+    app.setWindowIcon(QtGui.QIcon('icon.png'))
     window = MyApp()
     window.show()
     sys.exit(app.exec_())
