@@ -10,7 +10,7 @@ import math
 from PyQt4 import QtGui, QtCore
 from itertools import product as iter_product
 from itertools import cycle as iter_cycle
-import confidence_interval_bootstrap as cib
+#import confidence_interval_bootstrap as cib
 
 from results_visualiser_ui import Ui_MainWindow
 from results_loader import ResultsLoader
@@ -48,8 +48,11 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
         self.radio_linear.toggled.connect(self.check_state)
         self.radio_min.toggled.connect(self.check_state)
         self.radio_max.toggled.connect(self.check_state)
+        self.radio_nofit.toggled.connect(self.check_state)
+        self.radio_mle.toggled.connect(self.check_state)
+        self.radio_me.toggled.connect(self.check_state)
+        self.radio_lstsqr.toggled.connect(self.check_state)
         self.checkBoxLegend.toggled.connect(self.check_state)
-        self.checkBoxFit.toggled.connect(self.check_state)
         self.checkBoxCI.toggled.connect(self.check_state)
         self.checkBoxErr.toggled.connect(self.check_state)
         
@@ -63,6 +66,7 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
 
     def open_file(self):
         if _debug: print('open_file called')
+        self.statusbar.clearMessage()
         fname = QtGui.QFileDialog.getOpenFileName(self, 'OpenFile')
         if not fname:
             return
@@ -83,6 +87,8 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
         self.listHeading.addItems(self.results.get_wd_list())
         self.listHeading.setCurrentRow(0)
         self.comboBox.addItems(self.results.get_vars())
+
+        self.statusbar.showMessage("Sample size: %d   -   Loaded file: %s" % (self.results.seeds, fname))
 
     def copy(self):
         pixmap = QtGui.QPixmap.grabWidget(self.mpl.canvas)
@@ -157,6 +163,12 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
         if not (self.isReady2Plot or self.results.isAvailable):
             if _debug: print('plot returned not ready')
             return
+
+        msg = self.statusbar.currentMessage()
+        plot_msg = 'Updating plots ... ' + (
+                   'this might take a sip of coffee' if self.checkBoxCI.isChecked() else '')
+        self.statusbar.showMessage(plot_msg)
+
         self.ax.clear()
         var = self.comboBox.currentText()
         y = list(self.results.llcdf if self.radio_log.isChecked() else self.results.cdf)
@@ -164,6 +176,15 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
         if self.radio_min.isChecked():
             y.reverse()
             tail = 'lower'
+        # check the fit method if needed:
+        if self.radio_mle.isChecked():
+            fit_method = 'MLE'
+        elif self.radio_me.isChecked():
+            fit_method = 'ME'
+        elif self.radio_lstsqr.isChecked():
+            fit_method = 'LstSqr'
+        else:
+            fit_method = False
         # shapes and colors for plot
         marker = plot_marker_style()
         hasData = False
@@ -182,17 +203,20 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
                     self.ax.plot(sample, y, mark, label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
                 else:
                     # scatter + error bars
-                    err = cib.confidence_interval(sample, ci=self.ci_level, repeat=250)
+                    err = ResultsLoader.confidence_interval(sample, ci=self.ci_level, repeat=250)
                     self.ax.errorbar(sample, y, fmt=mark, xerr=(-err[0], err[1]),
                                      ecolor='gray', label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
                 if self.checkBoxCI.isChecked() and self.radio_log.isChecked() and plotCounter < 4:
                     # confidence interval lines
-                    self.ax.plot(*cib.fit_ci_gumbel(sample, ci=self.ci_level, repeat=250, tail=tail), '-'+mark[1])
-                if self.checkBoxFit.isChecked() and self.radio_log.isChecked():
+                    self.ax.plot(*ResultsLoader.fit_ci_gumbel(sample, ci=self.ci_level, repeat=250, 
+                                                              tail=tail), '-'+mark[1])
+                if fit_method and self.radio_log.isChecked():
                     # best fit line
-                    self.ax.plot(*ResultsLoader.fit(sample, y), '-'+mark[1])
+                    self.ax.plot(*ResultsLoader.fit(sample, y, fit_method, tail), '-'+mark[1])
         if hasData:
             self.adjust_n_draw_canvas()
+        
+        self.statusbar.showMessage(msg)
 
     def adjust_n_draw_canvas(self):
         if self.isReady2Plot:
@@ -239,7 +263,17 @@ def plot_marker_style():
             yield cur
 
 if __name__ == "__main__":
+
+    # this crap below is required to get icon in windows taskbar...
+    try:
+        import ctypes
+        myappid = u'raf.resultsvisualiser'  # arbitrary string
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    except:
+        pass  # ... and still need to work on other platforms.
+
     app = QtGui.QApplication(sys.argv)
+    app.setWindowIcon(QtGui.QIcon('icon.png'))
     window = Window()
     window.show()
     sys.exit(app.exec_())

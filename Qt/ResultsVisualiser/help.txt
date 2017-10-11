@@ -1,8 +1,8 @@
-Results Visualiser
+Results Visualiser for Probabilistic Lifting Analysis
 
 This application imports data from rlc (repeated lowering control) module and plot samples for the available sea states.
 
-This is a quick, messy and lazy help for the app =^)
+The objective to to aid in checking the results by assessing the quality of the statistical fits.
 
 ===
 
@@ -14,6 +14,8 @@ The current plot is copied into the clipboard. Note that the plot can also be sa
 
 Multiple sea states can be selectedat a time. Note that the list of Tp depends on the selected Hs.
 
-Fit is a best line fit to the sample using least squares method. Only show when y-axis is log-log.
+Fit is a best line fit to the sample using MLE, ME or least squares method. Only show when y-axis is log-log.
+
+Confidence intervals are calculated for the user input "Level" using a bootstrap technique for the quantile (shown as error bars) and for the fitted model. 
 
 The rest should be straightforward...
