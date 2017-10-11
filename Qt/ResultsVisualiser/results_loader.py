@@ -2,6 +2,7 @@ import math
 import pandas
 import numpy as np
 from scipy import stats as ss
+from bisect import bisect_left
 
 
 class ResultsLoader():
@@ -256,7 +257,28 @@ class ResultsLoader():
     # #############################################################################################
     # #############################################################################################
 
-        
+    @staticmethod
+    def closest_index(mylist, number):
+        """
+        Assumes mylist is sorted. Returns the index of the closest value to number.
+
+        If two numbers are equally close, return the largest index.
+
+        This is a slight change of:
+        https://stackoverflow.com/a/12141511/5069105
+        """
+        pos = bisect_left(mylist, number)
+        if pos == 0:
+            return 0
+        if pos == len(mylist):
+            return len(mylist)-1
+        before = mylist[pos - 1]
+        after = mylist[pos]
+        if after - number <= number - before:
+           return pos
+        else:
+           return pos-1
+
     # Deprecated
     def __fit__(self):
         """Linear fit of all sea states in the data.

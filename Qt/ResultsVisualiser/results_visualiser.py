@@ -55,6 +55,7 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
         self.checkBoxLegend.toggled.connect(self.check_state)
         self.checkBoxCI.toggled.connect(self.check_state)
         self.checkBoxErr.toggled.connect(self.check_state)
+        self.checkBoxP90.toggled.connect(self.check_state)
         
         self.lineEdit_level.editingFinished.connect(self.validate_ci_level)
         self.lineEdit_level.setText('0.95')
@@ -172,9 +173,11 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
         self.ax.clear()
         var = self.comboBox.currentText()
         y = list(self.results.llcdf if self.radio_log.isChecked() else self.results.cdf)
+        iq = ResultsLoader.closest_index(y, -math.log(-math.log(0.9)) if self.radio_log.isChecked() else 0.9)
         tail = 'upper'
         if self.radio_min.isChecked():
             y.reverse()
+            iq = len(y) - 1 - iq
             tail = 'lower'
         # check the fit method if needed:
         if self.radio_mle.isChecked():
@@ -213,6 +216,14 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
                 if fit_method and self.radio_log.isChecked():
                     # best fit line
                     self.ax.plot(*ResultsLoader.fit(sample, y, fit_method, tail), '-'+mark[1])
+
+                # Show where P90 is
+                if self.checkBoxP90.isChecked():
+                    xp90, yp90 = sample.as_matrix()[iq], y[iq]
+                    xp90t = xp90
+                    yp90t = yp90 - (2 if self.radio_log.isChecked() else 0.2)
+                    self.ax.annotate('P90', xy=(xp90, yp90), xytext=(xp90t, yp90t),
+                                     arrowprops=dict(arrowstyle='->'))
         if hasData:
             self.adjust_n_draw_canvas()
         
