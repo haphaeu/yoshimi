@@ -22,6 +22,7 @@ class Window(QtGui.QMainWindow, Ui_MainWindow):
         QtGui.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
         self.setupUi(self)
+        self.setWindowTitle('Results Visualiser for Probabilistic Lifting Analysis')
 
         self.results = ResultsLoader()
         self.isReady2Plot = False
