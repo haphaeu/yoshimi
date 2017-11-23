@@ -25,5 +25,5 @@ while h>0.01:
     if plot:
         ts.append(t)
         hs.append(h)
-print '%.1f seconds to empty the pipe' % t
+print('%.1f seconds to empty the pipe' % t)
 if plot: plt.plot(ts, hs)

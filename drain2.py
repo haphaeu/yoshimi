@@ -25,6 +25,6 @@ while h>0.01:
     h-=dt*(2*g*h)**0.5*num*delta**2/ID**2
     time.append(t)
     drain.append(0.01*int(100*(h0-h)*1.025*pi/4*ID**2))
-print '%.1f seconds to empty the pipe' % t
+print('%.1f seconds to empty the pipe' % t)
 plt.plot(time, drain)
 print('to drain 5 te took %.2fs' % time[drain.index(5)])
