@@ -55,29 +55,34 @@ def fill_ratio(r, h):
 
 
 # geometry
-pd = 0.4  # m, pipe diameter
-pl = 1.5  # m, pipe length
-ao = 0.1 * 0.06 + pi/4 * 0.06**2  # m2, orifice area
+pd = 0.368  # m, pipe diameter
+pl = 1.34  # m, pipe length
+ao = 0.16 * 0.06 + pi/4 * 0.06**2  # m2, orifice area
+
+# discharge coefficient
+Cd = 0.8
 
 # time traces
 dt = 1e-2  # s
 t = 0.0   # s
-h = 0.91 * pd
+h = 1 * pd
 time, height, fill = [t], [h], [fill_ratio(pd/2, h)]
 
 while h > 1e-3:
     if _debug: print(t)
     t += dt
-    area = dt * (2*g*h)**0.5 * ao / pl
+    area = Cd * dt * (2*g*h)**0.5 * ao / pl
     h -= calc_dh(area, h, pd/2)
     time.append(t)
     height.append(h)
     fill.append(fill_ratio(pd/2, h))
 
 plt.plot(time, fill)
-plt.title('fill')
+plt.title('Spool Draining Time - 406 mm pipe')
 plt.xlabel('Time [s]')
 plt.ylabel('Fill ratio')
+plt.xticks(range(11))
+plt.yticks((0, 0.25, 0.5, 0.75, 1))
 plt.grid()
 plt.show()
 print('%.1f seconds to empty the pipe' % t)
