@@ -11,11 +11,6 @@ care of chunking the number of jobs according to the number of processes.
 
 The worker function could potentially trigger post-processing as well.
 
-The disadvantage of using this is that we can't get thing back from the
-processes to use further in the code. But generally for running sims this
-is not needed.
-
-
 Created on Wed Aug 30 08:14:10 2017
 
 @author: rarossi
@@ -36,11 +31,12 @@ def f(Id):
     print('Running id ', Id)
     m.RunSimulation()
     print('Done id ', Id)
+    return Id
 
 
 if __name__ == '__main__':
     pool = Pool(processes=4)
-    pool.map(f, range(10))
+    print(pool.map(f, range(10)))
     # difference between map and map_async is that async won't
     # wait for execution to finish. in this example this is not needed.
     # r = pool.map_async(f, range(10))
