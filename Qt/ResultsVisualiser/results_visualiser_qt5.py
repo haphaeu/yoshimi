@@ -240,7 +240,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             ylabel = 'sf' if self.radio_min.isChecked() else 'cdf'
             if self.radio_log.isChecked(): ylabel = '-log(-log(' + ylabel + '))'
             self.ax.get_yaxis().set_label_text(ylabel)
-            numitems = len(list(self.ax._get_legend_handles()))
+            numitems = len(self.ax.get_legend_handles_labels()[1])
             pad_top = 1
             if numitems and self.checkBoxLegend.isChecked():
                 # trying to adjust the size of the legend and the plot to something reasonable
@@ -254,8 +254,8 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             self.mpl.canvas.draw()
 
     def showDialogLoadError(self, errors):
-       msg = QtGui.QMessageBox()
-       msg.setIcon(QtGui.QMessageBox.Critical)
+       msg = QtWidgets.QMessageBox()
+       msg.setIcon(QtWidgets.QMessageBox.Critical)
        msg.setText("Error found during loading of file.")
        msg.setInformativeText("Check the format of the input file.")
        msg.setWindowTitle("Error")
@@ -263,7 +263,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
        for i in errors:
            err_msg += i + '\n'
        msg.setDetailedText(err_msg)
-       msg.setStandardButtons(QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
+       msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
        retval = msg.exec_()
 
 def plot_marker_style():
