@@ -77,12 +77,12 @@ class ResultsLoader():
         try:
             if not all(self.df.columns[:3] == ['WaveHs', 'WaveTp', 'WaveDirection']):
                 err.append("Incorrect headers in file.")
-                err.append("   Expected 'WaveHs', 'WaveTp' and 'WaveDirection', got ", list(self.df.columns[:3]))
+                err.append("   Expected 'WaveHs', 'WaveTp' and 'WaveDirection', got {}".format(list(self.df.columns[:3])))
         except ValueError:
             err.append('Incorrect file headers.')
         
         # check for numeric entries only
-        if not all(self.df.applymap(np.isreal)):
+        if not self.df.applymap(np.isreal).all().all():
             err.append("Found non-numeric data in table.")
         
         # check if all sea states have the same number of seeds
@@ -109,7 +109,7 @@ class ResultsLoader():
                                 (self.df.WaveTp == tp) & 
                                 (self.df.WaveDirection == wd)])
                     if not iseeds == seeds:
-                        return ["Found sea states with different number of seeds."]
+                        return "Found sea states with different number of seeds."
         return []
 
     @staticmethod
