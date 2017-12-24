@@ -8,7 +8,7 @@ Created on Wed Oct 18 14:24:49 2017
 import sys
 import subprocess
 
-cmd = r'C:\Users\rarossi\Anaconda3\python.exe stream.py 6'
+cmd = r'python.exe stream.py 6'
 
 with open('out.txt', 'w') as pf:
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)

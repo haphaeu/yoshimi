@@ -11,8 +11,8 @@ import random
 
 
 def run(n):
-    for j in range(n):  # output 50 lines
-        sz = random.randint(5, 80)  # each line has 5 to 80 characters
+    for j in range(n):  # output n lines
+        sz = random.randint(5, 30)  # each line has 5 to 30 characters
         line = ''
         for i in range(sz):
             line += str(random.randint(0, 9))  # characters are number from 0 to 9
