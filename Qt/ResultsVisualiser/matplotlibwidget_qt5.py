@@ -7,7 +7,7 @@ class MplCanvas(FigureCanvas):
     """Class to represent the FigureCanvas widget"""
     def __init__(self):
         self.fig = Figure(facecolor='white')
-        self.ax = self.fig.add_subplot(111)
+        #self.ax = self.fig.add_subplot(111)
         FigureCanvas.__init__(self, self.fig)
         FigureCanvas.setSizePolicy(self, 
                                    QtWidgets.QSizePolicy.Expanding, 
