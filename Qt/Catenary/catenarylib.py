@@ -17,7 +17,7 @@ Created on Wed Sep 03
 @author: raf
 """
 
-from math import pi, tan, cos, asinh, radians
+from math import pi, tan, cos, asinh, radians, cosh
 
 
 def CatenaryCalcTAV(TA, V):
@@ -159,7 +159,8 @@ def CatenarySolveV_HLMBR(V, param, flag='H'):
     return CatenaryCalcTAV(TAi, V)
 
 
-def CatenaryOffset(params, DeltaH=0, DeltaV=0):
+def CatenaryOffset(params, DeltaH, DeltaV,
+                   tol=0.01, max_iter=100, delta=0.1, verbose=False):
     """CatenaryOffset(params, DeltaH, DeltaV) -> TA, V, H, L, MBR
 
     Apply an offset to the top of the catenary.
@@ -177,31 +178,29 @@ def CatenaryOffset(params, DeltaH=0, DeltaV=0):
 
     if DeltaH > UpperBoundDeltaH:
         print("Maximum offset restraint to 20% of the depth.")
-        return
+        raise SystemExit
     elif DeltaH < LowerBoundDeltaH:
         print("Minimum offset restraint to 20% of the depth or 50% of the horizontal length.")
-        return
+        raise SystemExit
     elif DeltaV > UpperBoundDeltaV or DeltaV < LowerBoundDeltaV:
         print("Vertical excursions restraint to either 50m or 10% of depth, whichever is smaller.")
-        return
+        raise SystemExit
     elif TA > UpperBoundTA and (DeltaH > 0 or DeltaV > 0):
         print("Far offsets and upwards excursions not allowed for top angles > 75deg")
-        return
+        raise SystemExit
     elif TA < LowerBoundTA and (DeltaH < 0 or DeltaV < 0):
         print("Near offsets and downwards excursions not allowed for top angles < 2deg")
-        return
+        raise SystemExit
 
     # Data for "offset" SCR
     Vo = V + DeltaV
 
     # Newton solver to find root of functions
 
-    delta = 0.1  # delta TA to estimate derivative
-    tolerance = 0.01
     f_TA = 999
     i = 0
     TAo = TA  # initial guess for TA
-    while abs(f_TA) > tolerance:
+    while (abs(f_TA) > tol) and (i < max_iter):
         i += 1
         # Calculate f(TAo-delta)
         retval = CatenaryCalcTAV(TAo - delta, Vo)
@@ -223,8 +222,27 @@ def CatenaryOffset(params, DeltaH=0, DeltaV=0):
         # Newton-Raphson Iteration
         TAo = TAo - f_TA / f_linha
 
+    if i >= max_iter:
+        print('WARNING: maximum number of iterations reached with error', f_TA)
+
+    if verbose:
+        print("Iters:", i)
+        print("Error:", f_TA)
+
     MBRo = retval[4]
     return TAo, Vo, Ho, Lo, MBRo
+
+
+def CatenaryPoints(params, num_points=100):
+    """CatenaryPoints(params, num_points) -> Xs, Ys"""
+
+    TA, V, H, L, MBR = params
+    dx = H / (num_points-1)
+    Xs, Ys = [0.0]*num_points, [0.0]*num_points
+    for i in range(num_points):
+        Xs[i] = i*dx
+        Ys[i] = MBR * cosh(Xs[i]/MBR) - MBR
+    return Xs, Ys
 
 
 def unit_tests():
@@ -242,7 +260,10 @@ def unit_tests():
            allclose((TA, V, H, L, MBR), CatenarySolveV_HLMBR(V, L, flag='L')),
            allclose((TA, V, H, L, MBR), CatenarySolveV_HLMBR(V, MBR, flag='MBR')),
            allclose((TA, V, H, L, MBR),
-                    CatenaryOffset(CatenaryOffset(CatenaryCalcTAV(TA, V), -5, 5), 5, -5)))):
+                    CatenaryOffset(CatenaryOffset(CatenaryCalcTAV(TA, V), -5, 5), 5, -5)),
+            allclose(([0.0, 532.1952268878438, 1064.3904537756875],
+                      [0.0, 332.79505723396693, 1799.9999999999995]),
+                     CatenaryPoints((TA, V, H, L, MBR), 3)))):
         return True
     else:
         return False
