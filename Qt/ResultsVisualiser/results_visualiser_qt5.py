@@ -14,6 +14,7 @@ from itertools import cycle as iter_cycle
 
 from results_visualiser_ui_qt5 import Ui_MainWindow
 from results_loader import ResultsLoader
+from results_table_qt5 import ResultsTable
 _debug = True
 
 class Window(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -37,10 +38,11 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.actionOpen.triggered.connect(self.open_file)
         self.actionExit.triggered.connect(self.close)
         self.actionCopy.triggered.connect(self.copy)
+        self.actionView_data.triggered.connect(self.openResultsTable)
         self.actionHelp.triggered.connect(self.help)
         self.actionAbout.triggered.connect(self.about)
         
-        self.comboBox.currentIndexChanged .connect(self.selectionChangedVariable)
+        self.comboBox.currentIndexChanged.connect(self.selectionChangedVariable)
         self.listHs.itemSelectionChanged.connect(self.selectionChangedHs)
         
         self.listTp.itemSelectionChanged.connect(self.check_state)
@@ -62,6 +64,9 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.lineEdit_level.setText('0.95')
         self.ci_level = 0.95
 
+        self.fname = None
+        self.resultsTable = None
+
     def resizeEvent(self, event):
         if _debug: print('resize event called - w=', self.width(), 'h=', self.height())
         self.adjust_n_draw_canvas()
@@ -76,6 +81,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         err = self.results.load(fname)
 
         if _debug: print('clearing lists')
+        self.fname = None
         self.listHs.clear()
         self.listTp.clear()
         self.listHeading.clear()
@@ -85,6 +91,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             self.showDialogLoadError(err)
             return
         if _debug: print('filling lists')
+        self.fname = fname
         self.listHs.addItems(self.results.get_hs_list())
         self.listHs.setCurrentRow(0)
         self.listHeading.addItems(self.results.get_wd_list())
@@ -93,6 +100,26 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.statusbar.showMessage("Sample size: %d   -   Loaded file: %s" % (self.results.seeds, fname))
 
+    def openResultsTable(self):
+        if _debug: print('openResultsTable called')
+        if not self.fname == None:
+            self.resultsTable = ResultsTable()
+            self.resultsTable.setGeometry(600, 50, 600, 480)
+            self.resultsTable.open_file(self.fname)
+            self.resultsTableUpdate()
+            self.resultsTable.show()
+
+    def resultsTableUpdate(self):
+        if not self.resultsTable == None:
+            # filter_dict = {'WaveHs': [list...],
+            #                 'WaveTp': [list...],
+            #              ...}
+            filter_dict = {'WaveHs': [float(x.text()) for x in self.listHs.selectedItems()],
+                           'WaveTp': [float(x.text()) for x in self.listTp.selectedItems()],
+                           'WaveDirection': [float(x.text()) for x in self.listHeading.selectedItems()],
+                           }
+            self.resultsTable.filter(filter_dict)
+        
     def copy(self):
         #pixmap = QtGui.QPixmap.grabWidget(self.mpl.canvas)
         pixmap = QtWidgets.QWidget.grab(self.mpl.canvas)
@@ -120,6 +147,9 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             self.isReady2Plot = True
             if _debug: print('   state ready2plot')
             self.plot()
+
+            if not self.resultsTable == None:
+                self.resultsTableUpdate()
         else:
             if _debug: print('   state not ready2plot')
 

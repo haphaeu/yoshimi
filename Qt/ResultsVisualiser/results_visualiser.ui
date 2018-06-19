@@ -343,7 +343,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>20</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -358,6 +358,7 @@
      <string>Edit</string>
     </property>
     <addaction name="actionCopy"/>
+    <addaction name="actionView_data"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -396,6 +397,11 @@
     <string>Exit</string>
    </property>
   </action>
+  <action name="actionView_data">
+   <property name="text">
+    <string>View data...</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -408,7 +414,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup"/>
   <buttongroup name="buttonGroup_2"/>
+  <buttongroup name="buttonGroup"/>
  </buttongroups>
 </ui>
