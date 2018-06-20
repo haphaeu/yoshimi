@@ -196,7 +196,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addWidget(self.mpl)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 27))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuFile = QtGui.QMenu(self.menubar)
         self.menuFile.setObjectName(_fromUtf8("menuFile"))
@@ -218,9 +218,12 @@ class Ui_MainWindow(object):
         self.actionOpen.setObjectName(_fromUtf8("actionOpen"))
         self.actionExit = QtGui.QAction(MainWindow)
         self.actionExit.setObjectName(_fromUtf8("actionExit"))
+        self.actionView_data = QtGui.QAction(MainWindow)
+        self.actionView_data.setObjectName(_fromUtf8("actionView_data"))
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addAction(self.actionExit)
         self.menuEdit.addAction(self.actionCopy)
+        self.menuEdit.addAction(self.actionView_data)
         self.menuHelp.addAction(self.actionHelp)
         self.menuHelp.addAction(self.actionAbout)
         self.menubar.addAction(self.menuFile.menuAction())
@@ -262,5 +265,6 @@ class Ui_MainWindow(object):
         self.actionCopy.setText(_translate("MainWindow", "Copy", None))
         self.actionOpen.setText(_translate("MainWindow", "Open...", None))
         self.actionExit.setText(_translate("MainWindow", "Exit", None))
+        self.actionView_data.setText(_translate("MainWindow", "View data...", None))
 
 from matplotlibwidget import MatplotlibWidget

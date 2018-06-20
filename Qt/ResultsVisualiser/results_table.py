@@ -10,12 +10,19 @@ Created on 18-Jun-2018
 
 @author: raf
 """
+try:
+    from PyQt5 import QtCore
+    from PyQt5 import QtWidgets as qt
+    _qt = 5
+except ImportError:
+    from PyQt4 import QtGui as qt
+    from PyQt4 import QtCore
+    _qt = 4
 
 import sys
 import numpy as np
 import pandas as pd
 import itertools
-from PyQt5 import QtCore, QtGui, QtWidgets
 
 _debug = True
 
@@ -46,13 +53,13 @@ class TableModel(QtCore.QAbstractTableModel):
         return QtCore.QAbstractTableModel.headerData(self, section, orientation, role)
 
 
-class ResultsTable(QtWidgets.QWidget):
+class ResultsTable(qt.QWidget):
     def __init__(self):
-        if _debug: print('ResultsTable.__init__')        
+        if _debug: print('ResultsTable.__init__')
         super(ResultsTable, self).__init__()
-        self.table = QtWidgets.QTableView(self)
-        self.clip = QtWidgets.QApplication.clipboard()
-        layout = QtWidgets.QGridLayout(self)
+        self.table = qt.QTableView(self)
+        self.clip = qt.QApplication.clipboard()
+        layout = qt.QGridLayout(self)
         layout.addWidget(self.table)
 
         self._data = []
@@ -60,18 +67,19 @@ class ResultsTable(QtWidgets.QWidget):
 
         # this makes the row height a bit smaller
         verticalHeader = self.table.verticalHeader()
-        verticalHeader.setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
+        if _qt == 5:
+            verticalHeader.setSectionResizeMode(qt.QHeaderView.Fixed)
+        else:
+            verticalHeader.setResizeMode(qt.QHeaderView.Fixed)
         verticalHeader.setDefaultSectionSize(20)
-
 
     def open_file(self, fname=None):
         if _debug: print('open_file called')
 
-        if fname == None:
-            fname = QtWidgets.QFileDialog.getOpenFileName(self, 'OpenFile')[0]
-
-        if not fname:
-            return
+        if fname is None:
+            fname = qt.QFileDialog.getOpenFileName(self, 'OpenFile')
+            if _qt == 5:
+                fname = fname[0]
 
         if _debug: print('fname', fname)
         self.load_results(fname)
@@ -97,9 +105,9 @@ class ResultsTable(QtWidgets.QWidget):
         for hs, tp, wd in itertools.product(filter_dict['WaveHs'],
                                             filter_dict['WaveTp'],
                                             filter_dict['WaveDirection']):
-            tmp = tmp.append(self._data[(self._data.WaveHs == hs)
-                                         & (self._data.WaveTp == tp)
-                                         & (self._data.WaveDirection == wd)])
+            tmp = tmp.append(self._data[(self._data.WaveHs == hs) &
+                                        (self._data.WaveTp == tp) &
+                                        (self._data.WaveDirection == wd)])
 
         self._filtered_data = tmp
         self.populate_table()
@@ -146,7 +154,7 @@ def dot(var):
 
 if __name__ == "__main__":
 
-    app = QtWidgets.QApplication(sys.argv)
+    app = qt.QApplication(sys.argv)
     window = ResultsTable()
     window.setGeometry(600, 50, 600, 480)
     window.show()

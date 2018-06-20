@@ -254,4 +254,4 @@ class Ui_MainWindow(object):
         self.actionExit.setText(_translate("MainWindow", "Exit"))
         self.actionView_data.setText(_translate("MainWindow", "View data..."))
 
-from matplotlibwidget_qt5 import MatplotlibWidget
+from matplotlibwidget import MatplotlibWidget

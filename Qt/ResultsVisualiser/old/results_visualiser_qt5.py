@@ -7,30 +7,20 @@ Created on Wed Sep 20 14:55:19 2017
 
 import sys
 import math
-
-try:
-    from PyQt5 import QtGui
-    from PyQt5 import qt as qt
-    from results_visualiser_ui_qt5 import Ui_MainWindow
-    _qt = 5
-except ImportError:
-    from PyQt4 import QtGui as qt
-    from results_visualiser_ui_qt4 import Ui_MainWindow
-    _qt = 4
-
+from PyQt5 import QtGui, QtCore, QtWidgets
 from itertools import product as iter_product
 from itertools import cycle as iter_cycle
+#import confidence_interval_bootstrap as cib
 
-from results_table import ResultsTable
-
+from results_visualiser_ui_qt5 import Ui_MainWindow
 from results_loader import ResultsLoader
+from results_table_qt5 import ResultsTable
 _debug = True
 
-
-class Window(qt.QMainWindow, Ui_MainWindow):
+class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def __init__(self):
-        qt.QMainWindow.__init__(self)
+        QtWidgets.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
         self.setupUi(self)
         self.setWindowTitle('Results Visualiser for Probabilistic Lifting Analysis')
@@ -40,9 +30,9 @@ class Window(qt.QMainWindow, Ui_MainWindow):
 
         self.ax = self.mpl.canvas.fig.add_subplot(111)
 
-        self.listHs.setSelectionMode(qt.QAbstractItemView.ExtendedSelection)
-        self.listTp.setSelectionMode(qt.QAbstractItemView.ExtendedSelection)
-        self.listHeading.setSelectionMode(qt.QAbstractItemView.ExtendedSelection)
+        self.listHs.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.listTp.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.listHeading.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
         # connect the signals with the slots
         self.actionOpen.triggered.connect(self.open_file)
@@ -84,9 +74,7 @@ class Window(qt.QMainWindow, Ui_MainWindow):
     def open_file(self):
         if _debug: print('open_file called')
         self.statusbar.clearMessage()
-        fname = qt.QFileDialog.getOpenFileName(self, 'OpenFile')
-        if _qt == 5:
-            fname = fname[0]
+        fname = QtWidgets.QFileDialog.getOpenFileName(self, 'OpenFile')[0]
         if _debug: print('selected file ', fname)
         if not fname:
             return
@@ -110,12 +98,11 @@ class Window(qt.QMainWindow, Ui_MainWindow):
         self.listHeading.setCurrentRow(0)
         self.comboBox.addItems(self.results.get_vars())
 
-        self.statusbar.showMessage("Sample size: %d   -   Loaded file: %s"
-                                   % (self.results.seeds, fname))
+        self.statusbar.showMessage("Sample size: %d   -   Loaded file: %s" % (self.results.seeds, fname))
 
     def openResultsTable(self):
         if _debug: print('openResultsTable called')
-        if self.fname is not None:
+        if not self.fname == None:
             self.resultsTable = ResultsTable()
             self.resultsTable.setGeometry(600, 50, 600, 480)
             self.resultsTable.open_file(self.fname)
@@ -123,51 +110,45 @@ class Window(qt.QMainWindow, Ui_MainWindow):
             self.resultsTable.show()
 
     def resultsTableUpdate(self):
-        if self.resultsTable is not None:
+        if not self.resultsTable == None:
             # filter_dict = {'WaveHs': [list...],
             #                 'WaveTp': [list...],
             #              ...}
-            filter_dict = {
-                    'WaveHs': [float(x.text()) for x in self.listHs.selectedItems()],
-                    'WaveTp': [float(x.text()) for x in self.listTp.selectedItems()],
-                    'WaveDirection': [float(x.text()) for x in self.listHeading.selectedItems()],
+            filter_dict = {'WaveHs': [float(x.text()) for x in self.listHs.selectedItems()],
+                           'WaveTp': [float(x.text()) for x in self.listTp.selectedItems()],
+                           'WaveDirection': [float(x.text()) for x in self.listHeading.selectedItems()],
                            }
             self.resultsTable.filter(filter_dict)
 
     def copy(self):
-        if _qt == 5:
-            pixmap = qt.QWidget.grab(self.mpl.canvas)
-        else:
-            pixmap = qt.QPixmap.grabWidget(self.mpl.canvas)
-
+        #pixmap = QtGui.QPixmap.grabWidget(self.mpl.canvas)
+        pixmap = QtWidgets.QWidget.grab(self.mpl.canvas)
         app.clipboard().setPixmap(pixmap)
 
     def help(self):
         try:
             with open('help.txt') as pf:
                 msg = pf.read()
-        except FileNotFoundError:
+        except:
             msg = 'help file not found'
         finally:
-            qt.QMessageBox.about(self, "Results Visualiser Help", msg)
+            QtWidgets.QMessageBox.about(self, "Results Visualiser Help", msg)
 
     def about(self):
-        qt.QMessageBox.about(self, "About", "TechnipFMC\nHydro Analysis Discipline\nStavanger")
+        QtWidgets.QMessageBox.about(self, "About", "TechnipFMC - Norway & Russia\nHydro Analysis Discipline\nStavanger")
 
     def check_state(self):
         if _debug: print('check_state called')
         self.isReady2Plot = False
-        if (
-               (len(list(self.listHs.selectedItems())) > 0) &
-               (len(list(self.listTp.selectedItems())) > 0) &
-               (len(list(self.listHeading.selectedItems())) > 0) &
-               (self.comboBox.count() > 0)
-             ):
+        if ((len(list(self.listHs.selectedItems())) > 0) &
+            (len(list(self.listTp.selectedItems())) > 0) &
+            (len(list(self.listHeading.selectedItems())) > 0) &
+            (self.comboBox.count() > 0)):
             self.isReady2Plot = True
             if _debug: print('   state ready2plot')
             self.plot()
 
-            if self.resultsTable is not None:
+            if not self.resultsTable == None:
                 self.resultsTableUpdate()
         else:
             if _debug: print('   state not ready2plot')
@@ -210,6 +191,7 @@ class Window(qt.QMainWindow, Ui_MainWindow):
         self.ci_level = ci
         self.check_state()
 
+
     def plot(self):
         if _debug: print('plot called')
         if not (self.isReady2Plot or self.results.isAvailable):
@@ -226,18 +208,17 @@ class Window(qt.QMainWindow, Ui_MainWindow):
         y = list(self.results.llcdf if self.radio_log.isChecked() else self.results.cdf)
 
         # iq modified to match the gumbel script in rlc pack:
-        # iq = ResultsLoader.closest_index(y, -math.log(-math.log(0.9))
-        #                                  if self.radio_log.isChecked() else 0.9)
+        # iq = ResultsLoader.closest_index(y, -math.log(-math.log(0.9)) if self.radio_log.isChecked() else 0.9)
         # not sure whether this is correct though, maybe need to change both approaches to match
         # numpy.percentile(y, 90, interpolation='linear') behaviour.
-        iq = int(0.9 * len(y)) - 1
+        iq = 0.9 * len(y)
 
         tail = 'upper'
         if self.radio_min.isChecked():
             y.reverse()
             # see note above
             # iq = len(y) - 1 - iq
-            iq = int(len(y) * 0.1) - 1
+            iq = len(y) * 0.1
             tail = 'lower'
         # check the fit method if needed:
         if self.radio_mle.isChecked():
@@ -304,25 +285,24 @@ class Window(qt.QMainWindow, Ui_MainWindow):
                 ncols = math.ceil(self.mpl.canvas.width()/150)  # 150 px assumed size of one label
                 nrows = math.ceil(numitems/ncols)
                 pad_top = max(0.6, 1.0 - 0.025 * nrows)  # pad at top to leave room for legend
-                # print('ncols', ncols, 'nrows', nrows, 'pad top', pad_top)
+                #print('ncols', ncols, 'nrows', nrows, 'pad top', pad_top)
                 self.ax.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, borderaxespad=0,
                                mode='expand', ncol=ncols, prop={'size': 8})
             self.mpl.canvas.fig.tight_layout(rect=(0, 0, 1, pad_top))  # left, bottom, right, top
             self.mpl.canvas.draw()
 
     def showDialogLoadError(self, errors):
-        msg = qt.QMessageBox()
-        msg.setIcon(qt.QMessageBox.Critical)
-        msg.setText("Error found during loading of file.")
-        msg.setInformativeText("Check the format of the input file.")
-        msg.setWindowTitle("Error")
-        err_msg = ''
-        for i in errors:
-            err_msg += i + '\n'
-        msg.setDetailedText(err_msg)
-        msg.setStandardButtons(qt.QMessageBox.Ok | qt.QMessageBox.Cancel)
-        msg.exec_()
-
+       msg = QtWidgets.QMessageBox()
+       msg.setIcon(QtWidgets.QMessageBox.Critical)
+       msg.setText("Error found during loading of file.")
+       msg.setInformativeText("Check the format of the input file.")
+       msg.setWindowTitle("Error")
+       err_msg = ''
+       for i in errors:
+           err_msg += i + '\n'
+       msg.setDetailedText(err_msg)
+       msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+       retval = msg.exec_()
 
 def plot_marker_style():
         # shapes and colors for plot
@@ -334,7 +314,6 @@ def plot_marker_style():
             if _debug: print('generator marker: ', cur)
             yield cur
 
-
 if __name__ == "__main__":
 
     # this crap below is required to get icon in windows taskbar...
@@ -342,14 +321,11 @@ if __name__ == "__main__":
         import ctypes
         myappid = u'raf.resultsvisualiser'  # arbitrary string
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-    except ImportError:
+    except:
         pass  # ... and still need to work on other platforms.
 
-    app = qt.QApplication(sys.argv)
-    if _qt == 5:
-        app.setWindowIcon(QtGui.QIcon('icon.png'))
-    else:
-        app.setWindowIcon(qt.QIcon('icon.png'))
+    app = QtWidgets.QApplication(sys.argv)
+    app.setWindowIcon(QtGui.QIcon('icon.png'))
     window = Window()
     window.show()
     sys.exit(app.exec_())

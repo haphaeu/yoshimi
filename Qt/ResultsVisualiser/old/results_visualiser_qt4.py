@@ -7,20 +7,19 @@ Created on Wed Sep 20 14:55:19 2017
 
 import sys
 import math
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PyQt4 import QtGui, QtCore
 from itertools import product as iter_product
 from itertools import cycle as iter_cycle
 #import confidence_interval_bootstrap as cib
 
-from results_visualiser_ui_qt5 import Ui_MainWindow
+from results_visualiser_ui import Ui_MainWindow
 from results_loader import ResultsLoader
-from results_table_qt5 import ResultsTable
 _debug = True
 
-class Window(QtWidgets.QMainWindow, Ui_MainWindow):
+class Window(QtGui.QMainWindow, Ui_MainWindow):
 
     def __init__(self):
-        QtWidgets.QMainWindow.__init__(self)
+        QtGui.QMainWindow.__init__(self)
         Ui_MainWindow.__init__(self)
         self.setupUi(self)
         self.setWindowTitle('Results Visualiser for Probabilistic Lifting Analysis')
@@ -30,19 +29,18 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.ax = self.mpl.canvas.fig.add_subplot(111)
 
-        self.listHs.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.listTp.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.listHeading.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.listHs.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
+        self.listTp.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
+        self.listHeading.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
 
         # connect the signals with the slots
         self.actionOpen.triggered.connect(self.open_file)
         self.actionExit.triggered.connect(self.close)
         self.actionCopy.triggered.connect(self.copy)
-        self.actionView_data.triggered.connect(self.openResultsTable)
         self.actionHelp.triggered.connect(self.help)
         self.actionAbout.triggered.connect(self.about)
         
-        self.comboBox.currentIndexChanged.connect(self.selectionChangedVariable)
+        self.comboBox.currentIndexChanged .connect(self.selectionChangedVariable)
         self.listHs.itemSelectionChanged.connect(self.selectionChangedHs)
         
         self.listTp.itemSelectionChanged.connect(self.check_state)
@@ -64,9 +62,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         self.lineEdit_level.setText('0.95')
         self.ci_level = 0.95
 
-        self.fname = None
-        self.resultsTable = None
-
     def resizeEvent(self, event):
         if _debug: print('resize event called - w=', self.width(), 'h=', self.height())
         self.adjust_n_draw_canvas()
@@ -74,14 +69,12 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
     def open_file(self):
         if _debug: print('open_file called')
         self.statusbar.clearMessage()
-        fname = QtWidgets.QFileDialog.getOpenFileName(self, 'OpenFile')[0]
-        if _debug: print('selected file ', fname)
+        fname = QtGui.QFileDialog.getOpenFileName(self, 'OpenFile')
         if not fname:
             return
         err = self.results.load(fname)
 
         if _debug: print('clearing lists')
-        self.fname = None
         self.listHs.clear()
         self.listTp.clear()
         self.listHeading.clear()
@@ -91,7 +84,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             self.showDialogLoadError(err)
             return
         if _debug: print('filling lists')
-        self.fname = fname
         self.listHs.addItems(self.results.get_hs_list())
         self.listHs.setCurrentRow(0)
         self.listHeading.addItems(self.results.get_wd_list())
@@ -100,29 +92,8 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.statusbar.showMessage("Sample size: %d   -   Loaded file: %s" % (self.results.seeds, fname))
 
-    def openResultsTable(self):
-        if _debug: print('openResultsTable called')
-        if not self.fname == None:
-            self.resultsTable = ResultsTable()
-            self.resultsTable.setGeometry(600, 50, 600, 480)
-            self.resultsTable.open_file(self.fname)
-            self.resultsTableUpdate()
-            self.resultsTable.show()
-
-    def resultsTableUpdate(self):
-        if not self.resultsTable == None:
-            # filter_dict = {'WaveHs': [list...],
-            #                 'WaveTp': [list...],
-            #              ...}
-            filter_dict = {'WaveHs': [float(x.text()) for x in self.listHs.selectedItems()],
-                           'WaveTp': [float(x.text()) for x in self.listTp.selectedItems()],
-                           'WaveDirection': [float(x.text()) for x in self.listHeading.selectedItems()],
-                           }
-            self.resultsTable.filter(filter_dict)
-        
     def copy(self):
-        #pixmap = QtGui.QPixmap.grabWidget(self.mpl.canvas)
-        pixmap = QtWidgets.QWidget.grab(self.mpl.canvas)
+        pixmap = QtGui.QPixmap.grabWidget(self.mpl.canvas)
         app.clipboard().setPixmap(pixmap)
 
     def help(self):
@@ -132,10 +103,10 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
         except:
             msg = 'help file not found'
         finally:
-            QtWidgets.QMessageBox.about(self, "Results Visualiser Help", msg)
+            QtGui.QMessageBox.about(self, "Results Visualiser Help", msg)
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "About", "TechnipFMC - Norway & Russia\nHydro Analysis Discipline\nStavanger")
+        QtGui.QMessageBox.about(self, "About", "TechnipFMC - Norway & Russia\nHydro Analysis Discipline\nStavanger")
 
     def check_state(self):
         if _debug: print('check_state called')
@@ -147,9 +118,6 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             self.isReady2Plot = True
             if _debug: print('   state ready2plot')
             self.plot()
-
-            if not self.resultsTable == None:
-                self.resultsTableUpdate()
         else:
             if _debug: print('   state not ready2plot')
 
@@ -270,7 +238,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             ylabel = 'sf' if self.radio_min.isChecked() else 'cdf'
             if self.radio_log.isChecked(): ylabel = '-log(-log(' + ylabel + '))'
             self.ax.get_yaxis().set_label_text(ylabel)
-            numitems = len(self.ax.get_legend_handles_labels()[1])
+            numitems = len(list(self.ax._get_legend_handles()))
             pad_top = 1
             if numitems and self.checkBoxLegend.isChecked():
                 # trying to adjust the size of the legend and the plot to something reasonable
@@ -284,8 +252,8 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
             self.mpl.canvas.draw()
 
     def showDialogLoadError(self, errors):
-       msg = QtWidgets.QMessageBox()
-       msg.setIcon(QtWidgets.QMessageBox.Critical)
+       msg = QtGui.QMessageBox()
+       msg.setIcon(QtGui.QMessageBox.Critical)
        msg.setText("Error found during loading of file.")
        msg.setInformativeText("Check the format of the input file.")
        msg.setWindowTitle("Error")
@@ -293,7 +261,7 @@ class Window(QtWidgets.QMainWindow, Ui_MainWindow):
        for i in errors:
            err_msg += i + '\n'
        msg.setDetailedText(err_msg)
-       msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+       msg.setStandardButtons(QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel)
        retval = msg.exec_()
 
 def plot_marker_style():
@@ -316,7 +284,7 @@ if __name__ == "__main__":
     except:
         pass  # ... and still need to work on other platforms.
 
-    app = QtWidgets.QApplication(sys.argv)
+    app = QtGui.QApplication(sys.argv)
     app.setWindowIcon(QtGui.QIcon('icon.png'))
     window = Window()
     window.show()
