@@ -23,6 +23,8 @@ import sys
 import numpy as np
 import pandas as pd
 import itertools
+import subprocess
+from os import path
 
 _debug = True
 
@@ -64,6 +66,7 @@ class ResultsTable(qt.QWidget):
 
         self._data = []
         self._filtered_data = []
+        self._work_path = ''
 
         # this makes the row height a bit smaller
         verticalHeader = self.table.verticalHeader()
@@ -72,6 +75,35 @@ class ResultsTable(qt.QWidget):
         else:
             verticalHeader.setResizeMode(qt.QHeaderView.Fixed)
         verticalHeader.setDefaultSectionSize(20)
+
+        # capture double click to try and lunch orcaflex at that seed
+        self.table.doubleClicked.connect(self.dblClicked)
+
+    def dblClicked(self, modelIndex):
+        """When the table is double clicked, Orcaflex is open for that yml file.
+        This function takes some shortcuts:
+           - no error checking
+           - it should do less things and have help functions
+           - seed number should be row % seeds
+        """
+        if _debug: print('dblClicked called.')
+
+        row, col = modelIndex.row(), modelIndex.column()
+        hs, tp, wd = self._filtered_data.loc[row, ['WaveHs', 'WaveTp', 'WaveDirection']]
+        seed_idx = row+1
+        fname = self._work_path + r'\runs\Hs%.2f_Tp%05.2f_WD%d_seed%d.yml' % (hs, tp, wd, seed_idx)
+
+        if _debug:
+            print('clicked at row', modelIndex.row(), ' and column', modelIndex.column())
+            print('hs', hs, '   tp', tp, '   wd', wd, '   seed', seed_idx)
+            print('fname', fname)
+
+        if path.exists(fname):
+            cmd = r'"C:\Program Files (x86)\Orcina\OrcaFlex\10.2\Orcaflex64.exe" "%s"' % fname
+            if _debug: print('cmd', cmd)
+            subprocess.Popen(cmd)
+        elif _debug:
+            print('Error: file not found:', fname)
 
     def open_file(self, fname=None):
         if _debug: print('open_file called')
@@ -82,6 +114,7 @@ class ResultsTable(qt.QWidget):
                 fname = fname[0]
 
         if _debug: print('fname', fname)
+        self._work_path = path.dirname(fname)
         self.load_results(fname)
         self.populate_table()
 
