@@ -77,6 +77,11 @@ class Window(qt.QMainWindow, Ui_MainWindow):
         self.fname = None
         self.resultsTable = None
 
+    def closeEvent(self, event):
+        if _debug: print('closeEvent called')
+        del self.resultsTable
+        super(qt.QMainWindow, self).closeEvent(event)
+
     def resizeEvent(self, event):
         if _debug: print('resize event called - w=', self.width(), 'h=', self.height())
         self.adjust_n_draw_canvas()
@@ -342,7 +347,7 @@ if __name__ == "__main__":
         import ctypes
         myappid = u'raf.resultsvisualiser'  # arbitrary string
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-    except ImportError:
+    except (ImportError, AttributeError):
         pass  # ... and still need to work on other platforms.
 
     app = qt.QApplication(sys.argv)
