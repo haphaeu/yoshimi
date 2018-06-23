@@ -70,11 +70,14 @@ class Window(qt.QMainWindow, Ui_MainWindow):
         self.checkBoxErr.toggled.connect(self.check_state)
         self.checkBoxP90.toggled.connect(self.check_state)
 
+        self.menubar.mouseMoveEvent = self.menubarMouseMove
+        
         self.lineEdit_level.editingFinished.connect(self.validate_ci_level)
-        self.lineEdit_level.setText('0.95')
-        self.ci_level = 0.95
+        self.lineEdit_level.setText('0.5')
+        self.ci_level = 0.5
 
         self.fname = None
+        self.msg_fname = ''
         self.resultsTable = None
 
     def closeEvent(self, event):
@@ -115,8 +118,8 @@ class Window(qt.QMainWindow, Ui_MainWindow):
         self.listHeading.setCurrentRow(0)
         self.comboBox.addItems(self.results.get_vars())
 
-        self.statusbar.showMessage("Sample size: %d   -   Loaded file: %s"
-                                   % (self.results.seeds, fname))
+        self.msg_fname = "Sample size: %d   -   Loaded file: %s" % (self.results.seeds, fname)
+        self.statusbar.showMessage(self.msg_fname)
 
     def openResultsTable(self):
         if _debug: print('openResultsTable called')
@@ -221,7 +224,6 @@ class Window(qt.QMainWindow, Ui_MainWindow):
             if _debug: print('plot returned not ready')
             return
 
-        msg = self.statusbar.currentMessage()
         plot_msg = 'Updating plots ... ' + (
                    'this might take a sip of coffee' if self.checkBoxCI.isChecked() else '')
         self.statusbar.showMessage(plot_msg)
@@ -292,7 +294,7 @@ class Window(qt.QMainWindow, Ui_MainWindow):
         if hasData:
             self.adjust_n_draw_canvas()
 
-        self.statusbar.showMessage(msg)
+        self.statusbar.showMessage(self.msg_fname)
 
     def adjust_n_draw_canvas(self):
         if self.isReady2Plot:
@@ -327,6 +329,11 @@ class Window(qt.QMainWindow, Ui_MainWindow):
         msg.setDetailedText(err_msg)
         msg.setStandardButtons(qt.QMessageBox.Ok | qt.QMessageBox.Cancel)
         msg.exec_()
+
+    def menubarMouseMove(self, mouseEv):
+        """dummy method to make sure status bar is not cleared when mouse hovers over menu"""
+        self.statusbar.showMessage(self.msg_fname)
+
 
 
 def plot_marker_style():

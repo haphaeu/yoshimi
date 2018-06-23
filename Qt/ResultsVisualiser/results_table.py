@@ -89,14 +89,15 @@ class ResultsTable(qt.QWidget):
         if _debug: print('dblClicked called.')
 
         row, col = modelIndex.row(), modelIndex.column()
-        hs, tp, wd = self._filtered_data.loc[row, ['WaveHs', 'WaveTp', 'WaveDirection']]
-        seed_idx = row+1
-        fname = self._work_path + r'\runs\Hs%.2f_Tp%05.2f_WD%d_seed%d.yml' % (hs, tp, wd, seed_idx)
+        if _debug: print('clicked at row', modelIndex.row(), ' and column', modelIndex.column())
 
-        if _debug:
-            print('clicked at row', modelIndex.row(), ' and column', modelIndex.column())
-            print('hs', hs, '   tp', tp, '   wd', wd, '   seed', seed_idx)
-            print('fname', fname)
+        # reset_index() is needed because indexes are kept after filtering.
+        hs, tp, wd = self._filtered_data.reset_index().loc[row, ['WaveHs', 'WaveTp', 'WaveDirection']]
+        seed_idx = row+1
+        if _debug: print('hs', hs, '   tp', tp, '   wd', wd, '   seed', seed_idx)
+            
+        fname = self._work_path + r'\runs\Hs%.2f_Tp%05.2f_WD%d_seed%d.yml' % (hs, tp, wd, seed_idx)
+        if _debug: print('fname', fname)
 
         if path.exists(fname):
             cmd = r'"C:\Program Files (x86)\Orcina\OrcaFlex\10.2\Orcaflex64.exe" "%s"' % fname
