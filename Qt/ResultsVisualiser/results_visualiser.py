@@ -124,7 +124,7 @@ class Window(qt.QMainWindow, Ui_MainWindow):
     def openResultsTable(self):
         if _debug: print('openResultsTable called')
         if self.fname is not None:
-            self.resultsTable = ResultsTable()
+            self.resultsTable = ResultsTable(self.results.seeds)
             self.resultsTable.setGeometry(600, 50, 600, 480)
             self.resultsTable.open_file(self.fname)
             self.resultsTableUpdate()

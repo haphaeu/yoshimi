@@ -55,18 +55,21 @@ class TableModel(QtCore.QAbstractTableModel):
         return QtCore.QAbstractTableModel.headerData(self, section, orientation, role)
 
 
-class ResultsTable(qt.QWidget):
-    def __init__(self):
+class ResultsTable(qt.QMainWindow):  #qt.QWidget):
+    def __init__(self, nseeds):
         if _debug: print('ResultsTable.__init__')
         super(ResultsTable, self).__init__()
+        self.setWindowTitle('Results Table')
         self.table = qt.QTableView(self)
+        self.setCentralWidget(self.table)
+        self.statusbar = qt.QStatusBar()
+        self.setStatusBar(self.statusbar)
         self.clip = qt.QApplication.clipboard()
-        layout = qt.QGridLayout(self)
-        layout.addWidget(self.table)
-
+        
         self._data = []
         self._filtered_data = []
         self._work_path = ''
+        self.num_seeds = nseeds
 
         # this makes the row height a bit smaller
         verticalHeader = self.table.verticalHeader()
@@ -78,7 +81,24 @@ class ResultsTable(qt.QWidget):
 
         # capture double click to try and lunch orcaflex at that seed
         self.table.doubleClicked.connect(self.dblClicked)
+        self.table.clicked.connect(self.clicked)
+        self.isDblClicked = False
 
+    def clicked(self, modelIndex):
+        if self.isDblClicked:
+            self.isDblClicked = False
+            return
+        
+        if _debug: print('clicked called.')
+        row, col = modelIndex.row(), modelIndex.column()
+        if _debug: print('clicked at row', modelIndex.row(), ' and column', modelIndex.column())
+        # reset_index() is needed because indexes are kept after filtering.
+        hs, tp, wd = self._filtered_data.reset_index().loc[row, ['WaveHs', 'WaveTp', 'WaveDirection']]
+        seed_idx = row % self.num_seeds + 1
+        if _debug: print('hs', hs, '   tp', tp, '   wd', wd, '   seed', seed_idx)    
+        fname = './runs/Hs%.2f_Tp%05.2f_WD%d_seed%d.yml' % (hs, tp, wd, seed_idx)
+        self.statusbar.showMessage("Double click to open %s" % fname)
+        
     def dblClicked(self, modelIndex):
         """When the table is double clicked, Orcaflex is open for that yml file.
         This function takes some shortcuts:
@@ -86,27 +106,25 @@ class ResultsTable(qt.QWidget):
            - it should do less things and have help functions
            - seed number should be row % seeds
         """
+        self.isDblClicked = True
         if _debug: print('dblClicked called.')
-
         row, col = modelIndex.row(), modelIndex.column()
-        if _debug: print('clicked at row', modelIndex.row(), ' and column', modelIndex.column())
-
-        # reset_index() is needed because indexes are kept after filtering.
         hs, tp, wd = self._filtered_data.reset_index().loc[row, ['WaveHs', 'WaveTp', 'WaveDirection']]
-        seed_idx = row+1
-        if _debug: print('hs', hs, '   tp', tp, '   wd', wd, '   seed', seed_idx)
-            
-        fname = self._work_path + r'\runs\Hs%.2f_Tp%05.2f_WD%d_seed%d.yml' % (hs, tp, wd, seed_idx)
+        seed_idx = row % self.num_seeds + 1
+        fname = self._work_path + '/runs/Hs%.2f_Tp%05.2f_WD%d_seed%d.yml' % (hs, tp, wd, seed_idx)
+        self.statusbar.showMessage("Opening %s" % fname)
         if _debug: print('fname', fname)
 
         if path.exists(fname):
-            cmd = r'"C:\Program Files (x86)\Orcina\OrcaFlex\10.2\Orcaflex64.exe" "%s"' % fname
+            cmd = '"C:/Program Files (x86)/Orcina/OrcaFlex/10.2/Orcaflex64.exe" "%s"' % fname
             if _debug: print('cmd', cmd)
             subprocess.Popen(cmd)
-        elif _debug:
-            print('Error: file not found:', fname)
+        else:
+            self.statusbar.showMessage("File not found: %s" % fname)
+            if _debug: print('Error: file not found:', fname)
 
     def open_file(self, fname=None):
+        """Obsolete. Keeping here for debugging purposes."""
         if _debug: print('open_file called')
 
         if fname is None:
@@ -189,7 +207,7 @@ def dot(var):
 if __name__ == "__main__":
 
     app = qt.QApplication(sys.argv)
-    window = ResultsTable()
+    window = ResultsTable(9999)
     window.setGeometry(600, 50, 600, 480)
     window.show()
     window.open_file()
