@@ -10,7 +10,7 @@ import math
 
 try:
     from PyQt5 import QtGui
-    from PyQt5 import qt as qt
+    from PyQt5 import QtWidgets as qt
     from results_visualiser_ui_qt5 import Ui_MainWindow
     _qt = 5
 except ImportError:
