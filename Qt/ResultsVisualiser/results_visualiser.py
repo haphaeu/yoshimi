@@ -39,6 +39,10 @@ class Window(qt.QMainWindow, Ui_MainWindow):
         self.isReady2Plot = False
 
         self.ax = self.mpl.canvas.fig.add_subplot(111)
+        self.mpl.canvas.mpl_connect('motion_notify_event', self.on_move)
+        self.ax.format_coord = format_coord
+        self.plot_lines_list = []
+        self.plot_seed_list = []
 
         self.listHs.setSelectionMode(qt.QAbstractItemView.ExtendedSelection)
         self.listTp.setSelectionMode(qt.QAbstractItemView.ExtendedSelection)
@@ -259,6 +263,8 @@ class Window(qt.QMainWindow, Ui_MainWindow):
         marker = plot_marker_style()
         hasData = False
         plotCounter = 0
+        self.plot_lines_list = []
+        self.plot_seed_list = []
         for hs, tp, wd in iter_product(
                           [float(x.text()) for x in self.listHs.selectedItems()],
                           [float(x.text()) for x in self.listTp.selectedItems()],
@@ -270,12 +276,24 @@ class Window(qt.QMainWindow, Ui_MainWindow):
                 mark = next(marker)
                 if not self.checkBoxErr.isChecked():
                     # scatter only
-                    self.ax.plot(sample, y, mark, label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
+                    self.plot_lines_list.append(
+                        self.ax.plot(sample, y,
+                                     mark, 
+                                     label='Hs{} Tp{} wd{}'.format(hs, tp, wd),
+                                     picker=True)
+                        )
+                    self.plot_seed_list.append(self.results.get_seeds(var, hs, tp, wd))
                 else:
                     # scatter + error bars
                     err = ResultsLoader.confidence_interval(sample, ci=self.ci_level, repeat=250)
-                    self.ax.errorbar(sample, y, fmt=mark, xerr=(-err[0], err[1]),
-                                     ecolor='gray', label='Hs{} Tp{} wd{}'.format(hs, tp, wd))
+                    self.plot_lines_list.append(
+                        self.ax.errorbar(sample, y,
+                                         fmt=mark, 
+                                         xerr=(-err[0], err[1]),
+                                         ecolor='gray', label='Hs{} Tp{} wd{}'.format(hs, tp, wd),
+                                         picker=True)
+                                         )
+                    self.plot_seed_list.append(self.results.get_seeds(var, hs, tp, wd))
                 if self.checkBoxCI.isChecked() and self.radio_log.isChecked() and plotCounter < 4:
                     # confidence interval lines
                     self.ax.plot(*ResultsLoader.fit_ci_gumbel(sample, ci=self.ci_level, repeat=250,
@@ -295,7 +313,17 @@ class Window(qt.QMainWindow, Ui_MainWindow):
             self.adjust_n_draw_canvas()
 
         self.statusbar.showMessage(self.msg_fname)
+        
+        if _debug: print(self.plot_lines_list)
 
+    def on_move(self, event):
+        self.ax.format_coord = format_coord
+        for line, s in zip(self.plot_lines_list, self.plot_seed_list):
+            line = line[0]  # quick fix - not sure why ax.plot is returning the plot object inside a list
+            if line.contains(event)[0]:
+                ind = line.contains(event)[1]["ind"][0]
+                self.ax.format_coord = lambda x, y: 'x = %.3f   y = %.3f   Seed %d ' % (x, y, s[ind])
+                
     def adjust_n_draw_canvas(self):
         if self.isReady2Plot:
             self.ax.get_yaxis().grid(True)
@@ -334,6 +362,10 @@ class Window(qt.QMainWindow, Ui_MainWindow):
         """dummy method to make sure status bar is not cleared when mouse hovers over menu"""
         self.statusbar.showMessage(self.msg_fname)
 
+        
+def format_coord(x, y):
+    """Helper function to format status bar in pyplot charts"""
+    return 'x = %.3f   y = %.3f' % (x, y)
 
 
 def plot_marker_style():

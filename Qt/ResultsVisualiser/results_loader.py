@@ -51,6 +51,12 @@ class ResultsLoader():
         return self.df[(self.df.WaveHs == hs) & (self.df.WaveTp == tp) & 
                        (self.df.WaveDirection == wd)][var].sort_values()
     
+    def get_seeds(self, var, hs, tp, wd):
+        tmp = self.df[(self.df.WaveHs == hs) & (self.df.WaveTp == tp) & 
+                       (self.df.WaveDirection == wd)][var]
+        seeds = sorted(range(len(tmp)), key=tmp.__getitem__)
+        return [s+1 for s in seeds]
+    
     def calc_cdf(self):
         seeds = len(self.df[(self.df.WaveHs == self.df.WaveHs[0]) & 
                             (self.df.WaveTp == self.df.WaveTp[0]) & 
