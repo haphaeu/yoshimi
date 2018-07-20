@@ -12,6 +12,7 @@ from numpy import linspace
 g = ss.gumbel_r(loc=0, scale=1)
 n=1000
 x = linspace(-2, 5, n)
+plt.figure(num=None, figsize=(9, 4), dpi=80, facecolor='w', edgecolor='k')
 plt.plot(x, g.pdf(x), label='pdf', lw=3)
 plt.plot(x, 0.5*g.cdf(x), label='cdf', lw=3)
 plt.xticks([])

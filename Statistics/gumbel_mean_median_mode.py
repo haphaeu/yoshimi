@@ -31,6 +31,7 @@ scale = 1
 sample = [my_dist.rvs(loc, scale) for _ in range(SZ)]
 g = my_dist(*my_dist.fit(sample))
 x, eps = linspace(min(sample), max(sample), SZ, retstep=True)
+plt.figure(num=None, figsize=(9, 4), dpi=80, facecolor='w', edgecolor='k')
 pp.plot(x, g.pdf(x), label='pdf')
 pp.plot(x, g.cdf(x), label='cdf')
 pp.plot([g.mean()]*2, [0, 1], label='mean %.2f' % g.mean())
