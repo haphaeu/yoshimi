@@ -24,17 +24,17 @@ class ResultsLoader():
 
     def get_vars(self):
         return self.df.columns[3:]
-        
+
     def get_hs_list(self):
         hs = list(set(self.df.WaveHs))
         hs.sort()
         return ['%.2f' % x for x in hs]
-    
+
     def get_wd_list(self):
         wd = list(set(self.df.WaveDirection))
         wd.sort()
         return ['%.1f' % x for x in wd]
-        
+
     def get_tp_list(self, hs_list):
         if not hs_list:
             return []
@@ -46,20 +46,20 @@ class ResultsLoader():
         tp = list(tp)
         tp.sort()
         return ['%.2f' % x for x in tp]
-    
+
     def get_sample(self, var, hs, tp, wd):
-        return self.df[(self.df.WaveHs == hs) & (self.df.WaveTp == tp) & 
+        return self.df[(self.df.WaveHs == hs) & (self.df.WaveTp == tp) &
                        (self.df.WaveDirection == wd)][var].sort_values()
-    
+
     def get_seeds(self, var, hs, tp, wd):
-        tmp = self.df[(self.df.WaveHs == hs) & (self.df.WaveTp == tp) & 
-                       (self.df.WaveDirection == wd)][var]
+        tmp = list(self.df[(self.df.WaveHs == hs) & (self.df.WaveTp == tp) &
+                           (self.df.WaveDirection == wd)][var])
         seeds = sorted(range(len(tmp)), key=tmp.__getitem__)
         return [s+1 for s in seeds]
-    
+
     def calc_cdf(self):
-        seeds = len(self.df[(self.df.WaveHs == self.df.WaveHs[0]) & 
-                            (self.df.WaveTp == self.df.WaveTp[0]) & 
+        seeds = len(self.df[(self.df.WaveHs == self.df.WaveHs[0]) &
+                            (self.df.WaveTp == self.df.WaveTp[0]) &
                             (self.df.WaveDirection == self.df.WaveDirection[0])])
         self.seeds = seeds
         self.cdf = np.linspace(0.5/seeds, (seeds-0.5)/seeds, seeds)
@@ -72,13 +72,13 @@ class ResultsLoader():
         output a message window in case cases are missing.
         """
         err = []
-        
+
         # check number of columns
         ncols = len(self.df.columns)
         if ncols < 4:
             err.append('Incorrect number of columns.')
             err.append('   Expected at least 4 columns, got %d' % ncols)
-        
+
         # check first three column
         try:
             if not all(self.df.columns[:3] == ['WaveHs', 'WaveTp', 'WaveDirection']):
@@ -86,11 +86,11 @@ class ResultsLoader():
                 err.append("   Expected 'WaveHs', 'WaveTp' and 'WaveDirection', got {}".format(list(self.df.columns[:3])))
         except ValueError:
             err.append('Incorrect file headers.')
-        
+
         # check for numeric entries only
         if not self.df.applymap(np.isreal).all().all():
             err.append("Found non-numeric data in table.")
-        
+
         # check if all sea states have the same number of seeds
         try:
             out = self.check_seeds()
@@ -102,8 +102,8 @@ class ResultsLoader():
         return err
 
     def check_seeds(self):
-        seeds = len(self.df[(self.df.WaveHs == self.df.WaveHs[0]) & 
-                            (self.df.WaveTp == self.df.WaveTp[0]) & 
+        seeds = len(self.df[(self.df.WaveHs == self.df.WaveHs[0]) &
+                            (self.df.WaveTp == self.df.WaveTp[0]) &
                             (self.df.WaveDirection == self.df.WaveDirection[0])])
         for hs in self.get_hs_list():
             hs = float(hs)
@@ -111,8 +111,8 @@ class ResultsLoader():
                 tp = float(tp)
                 for wd in self.get_wd_list():
                     wd = float(wd)
-                    iseeds = len(self.df[(self.df.WaveHs == hs) & 
-                                (self.df.WaveTp == tp) & 
+                    iseeds = len(self.df[(self.df.WaveHs == hs) &
+                                (self.df.WaveTp == tp) &
                                 (self.df.WaveDirection == wd)])
                     if not iseeds == seeds:
                         return "Found sea states with different number of seeds."
@@ -131,12 +131,12 @@ class ResultsLoader():
             gumbel = ss.gumbel_r
         else:
             gumbel = ss.gumbel_l
-        
+
         if method == 'MLE':
             params = gumbel.fit(x)
         else:
             params = gumbel._fitstart(x)
-        
+
         x = x.min(), x.max()
         if tail == 'upper':
             y = -np.log(-gumbel(*params).logcdf(x)).transpose()
@@ -180,7 +180,7 @@ class ResultsLoader():
             fargs       : optional. list with additional positional arguments for fstats.
             fkwargs     : optional. dictionary with additional key word arguments for fstats.
         """
-        
+
         # To make this work within a class:
         resample = ResultsLoader.resample
 
@@ -231,7 +231,7 @@ class ResultsLoader():
         """Returns the best fit and confidence intervals for sample assuming Gumbel distribution.
         Returns are ready to plot using plot(*fit_points(sample))
         """
-        
+
         # To make this work within a class
         confidence_interval = ResultsLoader.confidence_interval
 

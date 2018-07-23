@@ -7,6 +7,8 @@ Created on Wed Sep 20 14:55:19 2017
 
 import sys
 import math
+import subprocess
+from os import path
 
 try:
     from PyQt5 import QtGui
@@ -40,6 +42,7 @@ class Window(qt.QMainWindow, Ui_MainWindow):
 
         self.ax = self.mpl.canvas.fig.add_subplot(111)
         self.mpl.canvas.mpl_connect('motion_notify_event', self.on_move)
+        self.mpl.canvas.mpl_connect('button_press_event', self.on_click)
         self.ax.format_coord = format_coord
         self.plot_lines_list = []
         self.plot_seed_list = []
@@ -75,12 +78,13 @@ class Window(qt.QMainWindow, Ui_MainWindow):
         self.checkBoxP90.toggled.connect(self.check_state)
 
         self.menubar.mouseMoveEvent = self.menubarMouseMove
-        
+
         self.lineEdit_level.editingFinished.connect(self.validate_ci_level)
         self.lineEdit_level.setText('0.5')
         self.ci_level = 0.5
 
         self.fname = None
+        self._work_path = None
         self.msg_fname = ''
         self.resultsTable = None
 
@@ -106,6 +110,7 @@ class Window(qt.QMainWindow, Ui_MainWindow):
 
         if _debug: print('clearing lists')
         self.fname = None
+        self._work_path = None
         self.listHs.clear()
         self.listTp.clear()
         self.listHeading.clear()
@@ -116,6 +121,7 @@ class Window(qt.QMainWindow, Ui_MainWindow):
             return
         if _debug: print('filling lists')
         self.fname = fname
+        self._work_path = path.dirname(fname)
         self.listHs.addItems(self.results.get_hs_list())
         self.listHs.setCurrentRow(0)
         self.listHeading.addItems(self.results.get_wd_list())
@@ -273,34 +279,28 @@ class Window(qt.QMainWindow, Ui_MainWindow):
             if not sample.empty:
                 plotCounter += 1
                 hasData = True
-                mark = next(marker)
-                if not self.checkBoxErr.isChecked():
-                    # scatter only
-                    self.plot_lines_list.append(
-                        self.ax.plot(sample, y,
-                                     mark, 
-                                     label='Hs{} Tp{} wd{}'.format(hs, tp, wd),
-                                     picker=True)
-                        )
-                    self.plot_seed_list.append(self.results.get_seeds(var, hs, tp, wd))
-                else:
-                    # scatter + error bars
+                mark, color = next(marker)
+
+                # scatter plot
+                self.plot_lines_list.append(
+                            self.ax.scatter(sample, y, marker=mark, c=color,
+                                            label='Hs{} Tp{} wd{}'.format(hs, tp, wd), picker=True)
+                                            )
+                self.plot_seed_list.append(self.results.get_seeds(var, hs, tp, wd))
+
+                # error bars is needed:
+                if self.checkBoxErr.isChecked():
                     err = ResultsLoader.confidence_interval(sample, ci=self.ci_level, repeat=250)
-                    self.plot_lines_list.append(
-                        self.ax.errorbar(sample, y,
-                                         fmt=mark, 
-                                         xerr=(-err[0], err[1]),
-                                         ecolor='gray', label='Hs{} Tp{} wd{}'.format(hs, tp, wd),
-                                         picker=True)
-                                         )
-                    self.plot_seed_list.append(self.results.get_seeds(var, hs, tp, wd))
+                    self.ax.errorbar(sample, y, xerr=(-err[0], err[1]),
+                                     linestyle='None', ecolor='gray')
+
                 if self.checkBoxCI.isChecked() and self.radio_log.isChecked() and plotCounter < 4:
                     # confidence interval lines
                     self.ax.plot(*ResultsLoader.fit_ci_gumbel(sample, ci=self.ci_level, repeat=250,
-                                                              tail=tail), '-'+mark[1])
+                                                              tail=tail), '-'+color)
                 if fit_method and self.radio_log.isChecked():
                     # best fit line
-                    self.ax.plot(*ResultsLoader.fit(sample, y, fit_method, tail), '-'+mark[1])
+                    self.ax.plot(*ResultsLoader.fit(sample, y, fit_method, tail), '-'+color)
 
                 # Show where P90 is
                 if self.checkBoxP90.isChecked():
@@ -313,17 +313,42 @@ class Window(qt.QMainWindow, Ui_MainWindow):
             self.adjust_n_draw_canvas()
 
         self.statusbar.showMessage(self.msg_fname)
-        
+
         if _debug: print(self.plot_lines_list)
 
     def on_move(self, event):
         self.ax.format_coord = format_coord
         for line, s in zip(self.plot_lines_list, self.plot_seed_list):
-            line = line[0]  # quick fix - not sure why ax.plot is returning the plot object inside a list
             if line.contains(event)[0]:
-                ind = line.contains(event)[1]["ind"][0]
-                self.ax.format_coord = lambda x, y: 'x = %.3f   y = %.3f   Seed %d ' % (x, y, s[ind])
-                
+                i = line.contains(event)[1]["ind"][0]
+                self.ax.format_coord = lambda x, y: 'x = %.3f   y = %.3f   Seed %d ' % (x, y, s[i])
+                break  # only do it once in case data points overlap
+
+    def on_click(self, event):
+        if event.dblclick:
+            for line, s in zip(self.plot_lines_list, self.plot_seed_list):
+                if line.contains(event)[0]:
+                    i = line.contains(event)[1]["ind"][0]
+                    if _debug: print('Double clicked %s seed %d' % (line.get_label(), s[i]))
+                    hs, tp, wd = line.get_label().split()
+                    hs = float(hs.replace('Hs', ''))
+                    tp = float(tp.replace('Tp', ''))
+                    wd = float(wd.replace('wd', ''))
+                    lc = 'Hs%.2f_Tp%05.2f_WD%d_seed%d.yml' % (hs, tp, wd, s[i])
+                    if _debug: print('  Load case name', lc)
+                    fname = self._work_path + '/runs/%s' % lc
+                    if _debug: print('  fname', fname)
+                    if path.exists(fname):
+                        cmd = ('"C:/Program Files (x86)/Orcina/OrcaFlex/10.2/Orcaflex64.exe" '
+                               '"%s"' % fname)
+                        if _debug: print('cmd', cmd)
+                        subprocess.Popen(cmd)
+                    else:
+                        self.statusbar.showMessage("File not found: %s" % fname)
+                        if _debug: print('Error: file not found:', fname)
+
+                    break  # only do it once in case data points overlap
+
     def adjust_n_draw_canvas(self):
         if self.isReady2Plot:
             self.ax.get_yaxis().grid(True)
@@ -362,7 +387,7 @@ class Window(qt.QMainWindow, Ui_MainWindow):
         """dummy method to make sure status bar is not cleared when mouse hovers over menu"""
         self.statusbar.showMessage(self.msg_fname)
 
-        
+
 def format_coord(x, y):
     """Helper function to format status bar in pyplot charts"""
     return 'x = %.3f   y = %.3f' % (x, y)
