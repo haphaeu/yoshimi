@@ -24,7 +24,7 @@ import subprocess
 
 def find_videos():
     videos_2_merge = dict()
-    for fname in glob('GOPR????.mp4'):
+    for fname in glob('GOPR????.MP4'):
         #                                          GOPRnnnn.mp4 -> nnnn
         videos_2_merge[fname] = find_chapters(path.splitext(fname)[0][4:])
 
@@ -34,7 +34,7 @@ def find_videos():
 def find_chapters(fnumber):
     chapters_fnames = list()
     for chapter in range(1, 100):
-        chapter_file = 'GP%02d%s.mp4' % (chapter, fnumber)
+        chapter_file = 'GP%02d%s.MP4' % (chapter, fnumber)
         if not path.exists(chapter_file):
             break
         else:
@@ -48,55 +48,28 @@ def merged_filename(filename):
 
 
 def merge(base, chapters):
-    '''
-    # https://stackoverflow.com/questions/7333232/how-to-concatenate-two-mp4-files-using-ffmpeg#11175851
+    '''Merge base and chapters in one video using ffmpeg. '''
 
-    # prefered option - not working on my work laptop
-    ffmpeg -f concat -i mylist.txt -c copy output.mp4
-
-
-    # this one doesnt seem to work - only first video is copied, also not supposed to work for mp4
-    ffmpeg -i concat:input1.mp4^|input2.mp4 -codec copy output.mp4
-
-    #this is doing the job - people are saying transcode is not necessary though...
-    ffmpeg -i test1.mp4 -c copy -bsf:v h264_mp4toannexb -f mpegts temp1.ts
-    ffmpeg -i test2.mp4 -c copy -bsf:v h264_mp4toannexb -f mpegts temp2.ts
-    // now join
-    ffmpeg -i "concat:temp1.ts|temp2.ts" -c copy -bsf:a aac_adtstoasc output.mp4
-
-    #there is also this:
-    # https://stackoverflow.com/questions/5415006/ffmpeg-combine-merge-multiple-mp4-videos-not-working-output-only-contains-the?noredirect=1&lq=1
-    '''
-
-    ffmpeg = 'C:/Users/rarossi/portable/ffmpeg/bin/ffmpeg.exe'
-
-    print('    Transcoding chapters of %s:' % base)
-    cmd_concat = ''
-    for i, vid in enumerate((base, *chapters)):
-        cmd = ffmpeg + ' -loglevel 24 -y -i %s -c copy -bsf:v h264_mp4toannexb -f mpegts temp%d.ts' % (vid, i)
-        print('        ', vid, '...')
-        proc = subprocess.run(cmd)
-
-        if proc.returncode > 0:
-            print('Error. Skipping.')
-            cleanup()
-            return False
-
-        if i > 0:
-            cmd_concat += '|'
-        cmd_concat += 'temp%d.ts' % i
+    with open('input_list.txt', 'w') as fout:
+        for vid in (base, *chapters):
+            fout.write("file '%s'\n" % vid)
 
     print('    Merging chapters')
-    cmd_concat = ffmpeg + ' -loglevel 24 -i "concat:%s" -c copy -bsf:a aac_adtstoasc %s' % (
-            cmd_concat, merged_filename(base))
-    proc = subprocess.run(cmd_concat)
+    cmd = ['ffmpeg', 
+           '-hide_banner',
+           '-loglevel', 'warning', 
+           '-stats',
+           '-f', 'concat', 
+           '-i', 'input_list.txt', 
+           '-c', 'copy', 
+           '%s' % (merged_filename(base))]
+    proc = subprocess.run(cmd)
+    
+    if proc.returncode > 0:
+        print('==> Something went wrong.')
 
-    cleanup()
+    os.remove('input_list.txt')
 
-
-def cleanup():
-    for tmp in glob('temp*.ts'):
-        os.remove(tmp)
 
 
 def main():
