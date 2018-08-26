@@ -191,7 +191,7 @@ def main():
 
 
     vids = find_videos()
-    for base in vids:
+    for base in sorted(vids.keys()):
         print('\n\n', '*'*80, '\n', base, '\n')
         chaps = vids[base]
 
