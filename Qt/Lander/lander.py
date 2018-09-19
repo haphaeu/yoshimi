@@ -14,6 +14,7 @@ Created on Sep 09 2018
 """
 
 from PyQt4 import QtGui, QtCore
+from math import radians, sin, cos, exp
 import time
 
 import PIDController
@@ -144,6 +145,22 @@ class Window(QtGui.QWidget):
                         5 + self.game.ship_rocket[4+i][0] + self.game.pos[0],
                         self.game.thrust/100*(self.game.ship_rocket[4+i][1]) + self.game.pos[1])
 
+        # draw thrust meter
+        qp.drawRect(10, 75, 20, 200)
+        h = 1.98 * self.game.thrust
+        y = 275 - h
+        qp.fillRect(12, y, 17, h, QtCore.Qt.blue)
+
+        # draw speed meter
+        # using a sigmoid function to gain sensetivity on low speed range
+        qp.drawArc(-50, 75, 200, 200, -1440, 2880)
+        theta = radians(min(90, max(-90, 180/(1+exp(-self.game.vy/5))-90)))
+        r = 100
+        qp.drawLine(50, 175, 50+r*cos(theta), 175+r*sin(theta))
+        for v in [-20, -10, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 10, 20]:
+            theta = radians(180/(1+exp(-v/5))-90)
+            qp.drawText(50+1.1*r*cos(theta), 175+1.1*r*sin(theta), str(v))
+
         # stats texts
         qp.drawText(10, 10, 'Thrust %d %% - %s' % (self.game.thrust, 'ON' if self.game.thrust_on else 'OFF'))
         qp.drawText(10, 20, 'Speed %.1f' % self.game.vy)
@@ -154,7 +171,7 @@ class Window(QtGui.QWidget):
             qp.drawText(320, 240, 'Game Over')
             time.sleep(1)
 
-
+            
 if __name__ == '__main__':
 
     import sys
