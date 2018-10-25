@@ -10,13 +10,13 @@ Based on Orcina's version.
 
 class PIDController(object):
 
-    def __init__(self):
+    def __init__(self, k0=20, kP=-1, kI=-1, kD=-1):
 
         # The constants of the PID controller:
-        self.k0 = 20
-        self.kP = -2
-        self.kI = -0.5
-        self.kD = -1
+        self.k0 = k0
+        self.kP = kP
+        self.kI = kI
+        self.kD = kD
 
         # And default to not limiting the control variable:
         self.MinValue = 0
@@ -29,6 +29,14 @@ class PIDController(object):
         self.now_dedt = 0.0
 
         print('Initialised OK.')
+
+    def set(self, kP, kI, kD):
+        self.kP = kP
+        self.kI = kI
+        self.kD = kD
+
+    def get(self):
+        return (self.kP, self.kI, self.kD)
 
     def Calculate(self, signal, target, dt):
 

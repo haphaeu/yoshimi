@@ -39,7 +39,7 @@ class WorkThread(QtCore.QThread):
         self.vy = 0
         self.pos = [320, 50]
 
-        self.controller = PIDController.PIDController()
+        self.controller = PIDController.PIDController(k0=self.thrust, kP=-10, kI=0, kD=0)
         self.self_controlled = True
 
         self.game_over = False
@@ -51,7 +51,7 @@ class WorkThread(QtCore.QThread):
             dt = 0.1
 
             if self.self_controlled:
-                target = 4 if self.pos[1] > 400 else 15
+                target = 3 if self.pos[1] > 420 else self.parent.spinV.value()-50
                 self.thrust = self.controller.Calculate(self.vy, target, dt)
 
             if self.pos[1] < 465:
@@ -78,9 +78,55 @@ class Window(QtGui.QWidget):
 
     def __init__(self):
         QtGui.QWidget.__init__(self)
-        self.setFixedSize(640, 480)
         self.game = WorkThread(self)
+        self.initUI()
         self.game.start()
+
+    def initUI(self):
+        grid = QtGui.QGridLayout()
+        self.setLayout(grid)
+
+        self.spinV = QtGui.QSlider()
+        self.spinP = QtGui.QSlider()
+        self.spinI = QtGui.QSlider()
+        self.spinD = QtGui.QSlider()
+
+        self.spinV.setMaximum(100)
+        self.spinP.setMaximum(100)
+        self.spinI.setMaximum(100)
+        self.spinD.setMaximum(100)
+
+        self.spinV.setOrientation(QtCore.Qt.Vertical)
+        self.spinP.setOrientation(QtCore.Qt.Vertical)
+        self.spinI.setOrientation(QtCore.Qt.Vertical)
+        self.spinD.setOrientation(QtCore.Qt.Vertical)
+
+        grid.addItem(QtGui.QSpacerItem(500, 500), 0, 0)
+        grid.addWidget(self.spinV, 0, 1)
+        grid.addWidget(self.spinP, 0, 2)
+        grid.addWidget(self.spinI, 0, 3)
+        grid.addWidget(self.spinD, 0, 4)
+
+        self.spinV.setValue(65)
+        kP, kI, kD = self.game.controller.get()
+        self.spinP.setValue(-10*kP)
+        self.spinI.setValue(-10*kI)
+        self.spinD.setValue(-10*kD)
+
+        self.spinV.valueChanged.connect(self.spin_value_changed)
+        self.spinP.valueChanged.connect(self.spin_value_changed)
+        self.spinI.valueChanged.connect(self.spin_value_changed)
+        self.spinD.valueChanged.connect(self.spin_value_changed)
+
+        self.setWindowTitle('Lander')
+        self.setFixedSize(640, 480)
+        self.show()
+
+    def spin_value_changed(self):
+        self.game.controller.set(-self.spinP.value()/10,
+                                 -self.spinI.value()/10,
+                                 -self.spinD.value()/10)
+        print(*self.game.controller.get(), self.spinV.value())
 
     def mousePressEvent(self, event):
         if self.game.self_controlled:
