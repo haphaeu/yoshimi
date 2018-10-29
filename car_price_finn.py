@@ -116,10 +116,10 @@ def plot_all_stats(stats, norm=False, err_bars=False):
             plt.plot(years, price, label=car, lw=2)
 
     plt.title(('Normalised ' if norm else '') + 'Car Price Depreciation - source: finn.no',
-              fontsize=16)
+              fontsize=20)
     plt.xlabel('Car Year')
     plt.ylabel('Average Price in 1000 NOK')
-    plt.legend(loc='best')
+    plt.legend(loc='best', fontsize=14)
     plt.grid()
     plt.xlim(2000, 2020)
     plt.xticks(range(2000, 2021, 1))
@@ -127,8 +127,8 @@ def plot_all_stats(stats, norm=False, err_bars=False):
         plt.ylim(0, 1)
         plt.yticks([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
     else:
-        plt.ylim(0, 1000)
-        plt.yticks(range(0, 1001, 50))
+        plt.ylim(0, 500)
+        plt.yticks(range(0, 501, 50))
     plt.show()
 
 
@@ -139,34 +139,56 @@ if __name__ == '__main__':
     cars = {'Toyota Avensis Stasjonvogn Diesel':
                 'https://www.finn.no/car/used/search.html?'
                 'body_type=4&engine_fuel=0%2F2&make=0.813&model=1.813.3252',
-            'Renault Megane Stasjonvogn Diesel':
-                'https://www.finn.no/car/used/search.html?'
-                'body_type=4&engine_fuel=0%2F2&make=0.804&model=1.804.1331',
-            'Volvo XC 90':
-                'https://www.finn.no/car/used/search.html?'
-                'make=0.818&model=1.818.7651',
-            'Audi A6 Diesel':
-                'https://www.finn.no/car/used/search.html?'
-                'engine_fuel=0%2F2&make=0.744&model=1.744.840',
-            'Audi A4 Stasjonsvogn':
-                'https://www.finn.no/car/used/search.html?'
-                'body_type=4&make=0.744&model=1.744.839',
-            'VW Touran':
-                'https://www.finn.no/car/used/search.html?'
-                'make=0.817&model=1.817.7593',
-            'Tesla S':
-                'https://www.finn.no/car/used/search.html?'
-                'make=0.8078&model=1.8078.2000138',
+#            'Renault Megane Stasjonvogn Diesel':
+#                'https://www.finn.no/car/used/search.html?'
+#                'body_type=4&engine_fuel=0%2F2&make=0.804&model=1.804.1331',
+#            'Volvo XC 90':
+#                'https://www.finn.no/car/used/search.html?'
+#                'make=0.818&model=1.818.7651',
+#            'Audi A6 Diesel':
+#                'https://www.finn.no/car/used/search.html?'
+#                'engine_fuel=0%2F2&make=0.744&model=1.744.840',
+#            'Audi A4 Stasjonsvogn':
+#                'https://www.finn.no/car/used/search.html?'
+#                'body_type=4&make=0.744&model=1.744.839',
+#            'VW Touran':
+#                'https://www.finn.no/car/used/search.html?'
+#                'make=0.817&model=1.817.7593',
+#            'Tesla S':
+#                'https://www.finn.no/car/used/search.html?'
+#                'make=0.8078&model=1.8078.2000138',
             'Nissan Leaf':
                 'https://www.finn.no/car/used/search.html?'
                 'engine_fuel=0%2F4&make=0.792&model=1.792.2000183',
-
+#            'Volvo XC 60 Diesel':
+#                'https://www.finn.no/car/used/search.html?'
+#                'engine_fuel=0%2F2&make=0.818&model=1.818.2000093',
+            'Volvo V70 Diesel':
+                'https://www.finn.no/car/used/search.html?'
+                'engine_fuel=0%2F2&make=0.818&model=1.818.3077',
+            'Volvo V70 Bensin':
+                'https://www.finn.no/car/used/search.html?'
+                'engine_fuel=0%2F1&make=0.818&model=1.818.3077',
+            'Volvo V60':
+                'https://www.finn.no/car/used/search.html?'
+                'make=0.818&model=1.818.2000172',
+            'Toyota Auris':
+                'https://www.finn.no/car/used/search.html?'
+                'make=0.813&model=1.813.2000062',
             }
 
-    data = dict()
-    stats = dict()
+    try:
+        data
+    except NameError:
+        data = dict()
+        stats = dict()
+        
     for car in cars:
         print('\n', '='*len(car), '\n', car, '\n', '='*len(car), '\n')
+        if car in data:
+            print(car, 'already in the databse.')
+            continue
+        
         data[car] = getalldata(cars[car])
         print('Found', len(data[car]), 'entries.')
         stats[car] = getstats(data[car])
