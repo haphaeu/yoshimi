@@ -11,6 +11,103 @@ from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 
 
+base_url = 'https://www.finn.no/car/used/'
+
+# This is the entry page for car search in finn
+search_url = base_url + 'search.html'
+
+# This is the url for ads, finn_kode to be filled in
+ad_url =     base_url + 'ad.html?finnkode={}'
+
+# Codes for fuel types
+fuel_types = {'Bensin': 'engine_fuel=0%2F1',
+              'Diesel': 'engine_fuel=0%2F2',
+              'Hybrid': 'engine_fuel=0%2F11111',
+              'Electric': 'engine_fuel=0%2F4'
+             }
+
+# Codes for karosseri type
+karosseri_types = {'Stasjonsvogn': 'body_type=4',
+                   'SUV': 'body_type=9'
+                   # only these 2 for now...
+                  }
+
+# All cars maker, model and codes
+makers_and_models = dict()
+
+
+def fetch_makers_and_models():
+    '''initialised global variable makers_and_models with all cars makers and models in finn.
+    '''
+    global makers_and_models
+    
+    page = requests.get(search_url)
+    cont = page.content.decode()
+    parsed = BeautifulSoup(cont, 'lxml')
+    
+    
+    for hit in parsed.body.find_all('div', attrs={'class': 'fancyinput'}):
+        hit_maker = hit.find('input', attrs={'name': 'make'})
+        hit_model = hit.find('input', attrs={'name': 'model'})
+        if hit_maker:
+            maker_value = hit_maker.attrs['value']
+            maker = hit.find('span').text.split('(')[0].strip()
+            makers_and_models[maker] = {'value': maker_value, 'models': {}}
+        elif hit_model:
+            model_value = hit_model.attrs['value']
+            model = hit.find('span').text.split('(')[0].strip()
+            makers_and_models[maker]['models'][model] = model_value
+    
+    
+def build_url(makers_and_models, maker, model, fuel=None, karosseri=None):
+    '''Returns a valid search URL to be used in finn.no
+    '''
+    try:
+        url = search_url + '?model=' + makers_and_models[maker]['models'][model]
+        if fuel:
+            url += '&' + fuel_types[fuel]
+        if karosseri:
+            url += '&' + karosseri_types[karosseri]
+        return url
+    except KeyError:
+        print('Invalid maker, model, fuel or karosseri name.')
+
+
+# this method was stupid... see below new function
+#def getdata(url):
+#    '''Get car year, km and price from one page in finn.no.
+#    '''
+#    page = requests.get(url)
+#    cont = page.content.decode()
+#    parsed = BeautifulSoup(cont, 'lxml')
+#    data = list()
+#    search = ['year', 'km', 'kr']
+#    now = 0
+#    for i, hit in enumerate(parsed.body.find_all(
+#                            'span', attrs={'data-automation-id': 'bodyRow'})):
+#        if search[now] == 'year':
+#            if 1990 < int(hit.text) < 2020:
+#                year = int(hit.text)
+#                now = 1
+#            else:
+#                continue
+#        elif search[now] == 'km':
+#            if 'km' in hit.text:
+#                km = int(hit.text[:-2].replace(u'\xa0', ''))
+#                now = 2
+#            else:
+#                now = 0
+#                continue
+#        elif search[now] == 'kr':
+#            if ',-' in hit.text:
+#                kr = int(hit.text[:-2].replace(u'\xa0', ''))
+#                now = 0
+#                data.append((year, km, kr))
+#            else:
+#                now = 0
+#                continue
+#    return pandas.DataFrame(data, columns=search)
+
 def getdata(url):
     '''Get car year, km and price from one page in finn.no.
     '''
@@ -18,47 +115,44 @@ def getdata(url):
     cont = page.content.decode()
     parsed = BeautifulSoup(cont, 'lxml')
     data = list()
-    search = ['year', 'km', 'kr']
-    now = 0
-    for i, hit in enumerate(parsed.body.find_all(
-                            'span', attrs={'data-automation-id': 'bodyRow'})):
-        if search[now] == 'year':
-            if 1990 < int(hit.text) < 2020:
-                year = int(hit.text)
-                now = 1
-            else:
-                continue
-        elif search[now] == 'km':
-            if 'km' in hit.text:
-                km = int(hit.text[:-2].replace(u'\xa0', ''))
-                now = 2
-            else:
-                now = 0
-                continue
-        elif search[now] == 'kr':
-            if ',-' in hit.text:
-                kr = int(hit.text[:-2].replace(u'\xa0', ''))
-                now = 0
-                data.append((year, km, kr))
-            else:
-                now = 0
-                continue
-    return pandas.DataFrame(data, columns=search)
+
+    for i, hit in enumerate(parsed.body.find_all('div', 
+                                                 attrs={'class':
+                                                 'unit flex align-items-stretch result-item'})):
+
+        finn_kode = hit.find('a')['data-finnkode']
+        
+        hit_year = hit.find('span', attrs={'class': 'prm inlineblockify'})
+        year = int(hit_year.text)
+        
+        hit_km = hit_year.find_next('span', attrs={'class': 'prm inlineblockify'})
+        km = int(hit_km.text[:-2].replace(u'\xa0', ''))
+    
+        hit_kr = hit_km.find_next('span', attrs={'class': 'prm inlineblockify'})
+        try:
+            kr = int(hit_kr.text[:-2].replace(u'\xa0', ''))
+        except ValueError:  # Sold cars have a string instead of price
+            kr = hit_kr.text
+            #continue
+          
+        data.append((year, km, kr, finn_kode))
+
+    return pandas.DataFrame(data, columns=['year', 'km', 'kr', 'kode'])
 
 
-def getalldata(base_url):
+def getalldata(search_url):
     '''Call getdata() for all pages available in finn.no.
     '''
     # Make sure to tick only Brukt bil til salgs
     brukt_bil_str = '&sales_form=1'
-    if brukt_bil_str not in base_url:
-        base_url += brukt_bil_str
+    if brukt_bil_str not in search_url:
+        search_url += brukt_bil_str
 
     print('Fetching page 1')
-    dataf = getdata(base_url)
+    dataf = getdata(search_url)
     for page in range(2, 999):
         print('Fetching page', page)
-        url_next = base_url + '&page=%d' % page
+        url_next = search_url + '&page=%d' % page
         tmp_df = getdata(url_next)
         if len(tmp_df) < 2:  # stop when page has 1 or 0 cars
             break
@@ -70,9 +164,46 @@ def getalldata(base_url):
     return dataf
 
 
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+### Experimental functions - get detailed data for each car
+
+def get_detailed_car_data(finn_kode):
+    '''Get more detailed data for one car.
+    
+    Test - just getting number of car owners for now.
+    '''
+    page = requests.get(ad_url.format(finn_kode))
+    cont = page.content.decode()
+    parsed = BeautifulSoup(cont, 'lxml')
+    
+    for hit in parsed.body.find_all('dt', attrs={'data-automation-id': 'key'}):
+        if hit.text.lower().strip() == 'antall eiere':
+            value = hit.find_next('dd').text
+            break
+    else:
+        value = 'na'
+    
+    return value
+
+def get_all_detailed(data):
+    '''Call get_detailed_car_data for all cars in the database.
+    
+    SKETCH - just printing out to screen for now.
+    '''
+    I = len(data)
+    for i, car in enumerate(data):
+        print(i, I, car)
+        J = len(data[car].kode)
+        for j, kode in enumerate(data[car].kode):
+            print('  ', j, J, kode, get_detailed_car_data(kode))
+
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
+
+    
 def getstats(dataf):
     '''Calculate statistics for the data fetched.
     '''
+    dataf = dataf[dataf.kr != 'Solgt']  # get rid of sold cars for stats
     years = list(set(dataf.year))
     years.sort()
     stats = dict()
@@ -96,10 +227,12 @@ def print_stats(stats):
               stats[year]['kr mean'], stats[year]['kr std']))
 
 
-def plot_all_stats(stats, norm=False, err_bars=False):
+def plot_all_stats(stats, norm=False, err_bars=False, min_year_user=0):
 
     plt.figure(num=None, figsize=(12, 6), dpi=80, facecolor='w', edgecolor='k')
 
+    max_price = 0
+    min_year = 2020
     for car in stats:
         years = [year for year in stats[car]]
         years.sort()
@@ -115,84 +248,79 @@ def plot_all_stats(stats, norm=False, err_bars=False):
         else:
             plt.plot(years, price, label=car, lw=2)
 
+        min_year = min(min_year, years[0])
+        max_price = max(max_price, max(price))
+
     plt.title(('Normalised ' if norm else '') + 'Car Price Depreciation - source: finn.no',
               fontsize=20)
     plt.xlabel('Car Year')
     plt.ylabel('Average Price in 1000 NOK')
     plt.legend(loc='best', fontsize=14)
     plt.grid()
-    plt.xlim(2000, 2020)
-    plt.xticks(range(2000, 2021, 1))
+    min_year = max(min_year, min_year_user)
+    plt.xlim(min_year, years[-1])
+    plt.xticks(range(min_year, years[-1]+1, 1))
     if norm:
         plt.ylim(0, 1)
         plt.yticks([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
     else:
-        plt.ylim(0, 500)
-        plt.yticks(range(0, 501, 50))
+        plt.ylim(0, max_price)
+        plt.yticks(range(0, int(max_price)+1, 50))
     plt.show()
+
+
+class Car():
+    '''Simple class to handle input of cars
+    '''
+    def __init__(self, maker, model, fuel=None, karosseri=None):
+        self.maker = maker
+        self.model = model
+        self.fuel = fuel
+        self.karosseri = karosseri
+        
+        self.id = ' '.join([maker, model])
+        if fuel:
+            self.id += ' ' + fuel
+        if karosseri:
+            self.id += ' ' + karosseri
+            
+        self.url = build_url(makers_and_models, maker, model, fuel, karosseri)
 
 
 if __name__ == '__main__':
 
-    # Remember to tick Brukt bil til salgs, to remove leasing shit
-    # append '&sales_form=1' to the url.
-    cars = {'Toyota Avensis Stasjonvogn Diesel':
-                'https://www.finn.no/car/used/search.html?'
-                'body_type=4&engine_fuel=0%2F2&make=0.813&model=1.813.3252',
-#            'Renault Megane Stasjonvogn Diesel':
-#                'https://www.finn.no/car/used/search.html?'
-#                'body_type=4&engine_fuel=0%2F2&make=0.804&model=1.804.1331',
-#            'Volvo XC 90':
-#                'https://www.finn.no/car/used/search.html?'
-#                'make=0.818&model=1.818.7651',
-#            'Audi A6 Diesel':
-#                'https://www.finn.no/car/used/search.html?'
-#                'engine_fuel=0%2F2&make=0.744&model=1.744.840',
-#            'Audi A4 Stasjonsvogn':
-#                'https://www.finn.no/car/used/search.html?'
-#                'body_type=4&make=0.744&model=1.744.839',
-#            'VW Touran':
-#                'https://www.finn.no/car/used/search.html?'
-#                'make=0.817&model=1.817.7593',
-#            'Tesla S':
-#                'https://www.finn.no/car/used/search.html?'
-#                'make=0.8078&model=1.8078.2000138',
-            'Nissan Leaf':
-                'https://www.finn.no/car/used/search.html?'
-                'engine_fuel=0%2F4&make=0.792&model=1.792.2000183',
-#            'Volvo XC 60 Diesel':
-#                'https://www.finn.no/car/used/search.html?'
-#                'engine_fuel=0%2F2&make=0.818&model=1.818.2000093',
-            'Volvo V70 Diesel':
-                'https://www.finn.no/car/used/search.html?'
-                'engine_fuel=0%2F2&make=0.818&model=1.818.3077',
-            'Volvo V70 Bensin':
-                'https://www.finn.no/car/used/search.html?'
-                'engine_fuel=0%2F1&make=0.818&model=1.818.3077',
-            'Volvo V60':
-                'https://www.finn.no/car/used/search.html?'
-                'make=0.818&model=1.818.2000172',
-            'Toyota Auris':
-                'https://www.finn.no/car/used/search.html?'
-                'make=0.813&model=1.813.2000062',
-            }
+    print('Fetching makers and models from finn.no. ', end='')
+    fetch_makers_and_models()
+    print('Done')
+    
+    # Cars to be searched for
+    #            maker, model, fuel=None, karosseri=None)
+    cars = [Car('Toyota', 'Avensis', 'Diesel'),
+            Car('Renault', 'Megane', 'Diesel', 'Stasjonsvogn'),
+            # Car('Volvo', 'XC 90'),
+            Car('Nissan', 'Leaf'),
+            Car('Volvo', 'V60'),
+            Car('Toyota', 'Auris'),
+           ]
 
     try:
         data
     except NameError:
         data = dict()
-        stats = dict()
+        
+    stats = dict()
         
     for car in cars:
-        print('\n', '='*len(car), '\n', car, '\n', '='*len(car), '\n')
-        if car in data:
-            print(car, 'already in the databse.')
-            continue
         
-        data[car] = getalldata(cars[car])
-        print('Found', len(data[car]), 'entries.')
-        stats[car] = getstats(data[car])
-        print_stats(stats[car])
+        print('\n', '='*len(car.id), '\n', car.id, '\n', '='*len(car.id), '\n')
+        if car.id not in data:
+            data[car.id] = getalldata(car.url)
+        else:
+            print(car.id, 'already in the database.')
+        
+        print('Found', len(data[car.id]), 'entries.')
+        stats[car.id] = getstats(data[car.id])
+        print_stats(stats[car.id])
         print()
 
     plot_all_stats(stats)
