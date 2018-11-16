@@ -5,8 +5,10 @@ Created on Thu Oct 25 19:49:39 2018
 
 @author: raf
 """
+import re
 import pandas
 import requests
+import numpy as np
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 
@@ -45,25 +47,33 @@ def fetch_makers_and_models():
     cont = page.content.decode()
     parsed = BeautifulSoup(cont, 'lxml')
     
+    # regex to match name and count from 'name (count)'
+    # name might have parenthesis, and finn might put lots of crap like \xa0085 on the side 
+    # of the numbers in count...
+    expr = re.compile('(.+)\((\d+).*\)')  
     
     for hit in parsed.body.find_all('div', attrs={'class': 'fancyinput'}):
         hit_maker = hit.find('input', attrs={'name': 'make'})
         hit_model = hit.find('input', attrs={'name': 'model'})
         if hit_maker:
             maker_value = hit_maker.attrs['value']
-            maker = hit.find('span').text.split('(')[0].strip()
-            makers_and_models[maker] = {'value': maker_value, 'models': {}}
+            maker, count = expr.findall(hit.find('span').text.replace('\xa0', ''))[0]
+            maker = maker.strip()
+            count = int(count)
+            makers_and_models[maker] = {'value': maker_value, 'count': count, 'models': {}}
         elif hit_model:
             model_value = hit_model.attrs['value']
-            model = hit.find('span').text.split('(')[0].strip()
-            makers_and_models[maker]['models'][model] = model_value
+            model, count = expr.findall(hit.find('span').text.replace('\xa0', ''))[0]
+            model = model.strip()
+            count = int(count)
+            makers_and_models[maker]['models'][model] = {'value': model_value, 'count': count}
     
     
 def build_url(makers_and_models, maker, model, fuel=None, karosseri=None):
     '''Returns a valid search URL to be used in finn.no
     '''
     try:
-        url = search_url + '?model=' + makers_and_models[maker]['models'][model]
+        url = search_url + '?model=' + makers_and_models[maker]['models'][model]['value']
         if fuel:
             url += '&' + fuel_types[fuel]
         if karosseri:
@@ -203,7 +213,8 @@ def get_all_detailed(data):
 def getstats(dataf):
     '''Calculate statistics for the data fetched.
     '''
-    dataf = dataf[dataf.kr != 'Solgt']  # get rid of sold cars for stats
+    # dataf = dataf[dataf.kr != 'Solgt']  # get rid of sold cars for stats
+    dataf = dataf[dataf.kr.apply(np.isreal)]
     years = list(set(dataf.year))
     years.sort()
     stats = dict()
@@ -296,11 +307,11 @@ if __name__ == '__main__':
     # Cars to be searched for
     #            maker, model, fuel=None, karosseri=None)
     cars = [Car('Toyota', 'Avensis', 'Diesel'),
-            Car('Renault', 'Megane', 'Diesel', 'Stasjonsvogn'),
+            Car('Renault', 'Megane'),
             # Car('Volvo', 'XC 90'),
-            Car('Nissan', 'Leaf'),
-            Car('Volvo', 'V60'),
-            Car('Toyota', 'Auris'),
+            #Car('Nissan', 'Leaf'),
+            #Car('Volvo', 'V60'),
+            #Car('Toyota', 'Auris'),
            ]
 
     try:
