@@ -42,16 +42,16 @@ def fetch_makers_and_models():
     '''initialised global variable makers_and_models with all cars makers and models in finn.
     '''
     global makers_and_models
-    
+
     page = requests.get(search_url)
     cont = page.content.decode()
     parsed = BeautifulSoup(cont, 'lxml')
-    
+
     # regex to match name and count from 'name (count)'
-    # name might have parenthesis, and finn might put lots of crap like \xa0085 on the side 
+    # name might have parenthesis, and finn might put lots of crap like \xa0085 on the side
     # of the numbers in count...
-    expr = re.compile('(.+)\((\d+).*\)')  
-    
+    expr = re.compile('(.+)\((\d+).*\)')
+
     for hit in parsed.body.find_all('div', attrs={'class': 'fancyinput'}):
         hit_maker = hit.find('input', attrs={'name': 'make'})
         hit_model = hit.find('input', attrs={'name': 'model'})
@@ -67,8 +67,8 @@ def fetch_makers_and_models():
             model = model.strip()
             count = int(count)
             makers_and_models[maker]['models'][model] = {'value': model_value, 'count': count}
-    
-    
+
+
 def build_url(makers_and_models, maker, model, fuel=None, karosseri=None):
     '''Returns a valid search URL to be used in finn.no
     '''
@@ -126,25 +126,25 @@ def getdata(url):
     parsed = BeautifulSoup(cont, 'lxml')
     data = list()
 
-    for i, hit in enumerate(parsed.body.find_all('div', 
+    for i, hit in enumerate(parsed.body.find_all('div',
                                                  attrs={'class':
                                                  'unit flex align-items-stretch result-item'})):
 
         finn_kode = hit.find('a')['data-finnkode']
-        
+
         hit_year = hit.find('span', attrs={'class': 'prm inlineblockify'})
         year = int(hit_year.text)
-        
+
         hit_km = hit_year.find_next('span', attrs={'class': 'prm inlineblockify'})
         km = int(hit_km.text[:-2].replace(u'\xa0', ''))
-    
+
         hit_kr = hit_km.find_next('span', attrs={'class': 'prm inlineblockify'})
         try:
             kr = int(hit_kr.text[:-2].replace(u'\xa0', ''))
         except ValueError:  # Sold cars have a string instead of price
             kr = hit_kr.text
             #continue
-          
+
         data.append((year, km, kr, finn_kode))
 
     return pandas.DataFrame(data, columns=['year', 'km', 'kr', 'kode'])
@@ -179,25 +179,25 @@ def getalldata(search_url):
 
 def get_detailed_car_data(finn_kode):
     '''Get more detailed data for one car.
-    
+
     Test - just getting number of car owners for now.
     '''
     page = requests.get(ad_url.format(finn_kode))
     cont = page.content.decode()
     parsed = BeautifulSoup(cont, 'lxml')
-    
+
     for hit in parsed.body.find_all('dt', attrs={'data-automation-id': 'key'}):
         if hit.text.lower().strip() == 'antall eiere':
             value = hit.find_next('dd').text
             break
     else:
         value = 'na'
-    
+
     return value
 
 def get_all_detailed(data):
     '''Call get_detailed_car_data for all cars in the database.
-    
+
     SKETCH - just printing out to screen for now.
     '''
     I = len(data)
@@ -209,7 +209,7 @@ def get_all_detailed(data):
 
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 
-    
+
 def getstats(dataf):
     '''Calculate statistics for the data fetched.
     '''
@@ -288,14 +288,22 @@ class Car():
         self.model = model
         self.fuel = fuel
         self.karosseri = karosseri
-        
+
         self.id = ' '.join([maker, model])
         if fuel:
             self.id += ' ' + fuel
         if karosseri:
             self.id += ' ' + karosseri
-            
+
         self.url = build_url(makers_and_models, maker, model, fuel, karosseri)
+
+    def __eq__(self, other):
+
+        return isinstance(other, Car) and \
+               self.maker == other.maker \
+               and self.model == other.model \
+               and self.fuel == other.fuel \
+               and self.karosseri == other.karosseri
 
 
 if __name__ == '__main__':
@@ -303,7 +311,7 @@ if __name__ == '__main__':
     print('Fetching makers and models from finn.no. ', end='')
     fetch_makers_and_models()
     print('Done')
-    
+
     # Cars to be searched for
     #            maker, model, fuel=None, karosseri=None)
     cars = [Car('Toyota', 'Avensis', 'Diesel'),
@@ -318,17 +326,17 @@ if __name__ == '__main__':
         data
     except NameError:
         data = dict()
-        
+
     stats = dict()
-        
+
     for car in cars:
-        
+
         print('\n', '='*len(car.id), '\n', car.id, '\n', '='*len(car.id), '\n')
         if car.id not in data:
             data[car.id] = getalldata(car.url)
         else:
             print(car.id, 'already in the database.')
-        
+
         print('Found', len(data[car.id]), 'entries.')
         stats[car.id] = getstats(data[car.id])
         print_stats(stats[car.id])
