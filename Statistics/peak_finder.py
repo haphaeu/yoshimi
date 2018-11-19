@@ -13,6 +13,7 @@ Created on Fri Nov  9 21:11:20 2018
 
 @author: rarossi
 """
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import OrcFxAPI as of
@@ -76,8 +77,8 @@ def weib2gumb(params, N):
 
     See [1].
     '''
-    g, d, b = params
-    return (d + b * log(N)**(1/g), b/g * log(N)**(1/g-1))
+    shape, loc, scale = params
+    return (loc + scale * log(N)**(1/shape), scale/shape * log(N)**(1/shape-1))
 
 
 def global_peaks(values, times):
@@ -100,15 +101,26 @@ def global_peaks(values, times):
     return values[index], times[index]
 
 
-def fetch_timetrace(sim, list_vars):
+def fetch_timetrace(sim, list_vars=None):
 
     # very simplified fetch of timetraces
+    # supports sim and txt files
 
     print('Loading', sim, end='.')
+
+    if os.path.splitext(sim)[1].lower() == '.txt':
+        data = np.loadtxt(sim, skiprows=1, unpack=True)
+        with open(sim) as pf:
+            headers = pf.readline().rstrip().split('\t')
+        ttraces = {h: tt for h, tt in zip(headers, data)}
+        print('Done.')
+        return ttraces
+
+    # assuming sim file here
     m = of.Model(sim)
     print(' Done.')
     ttraces = dict()
-    ttraces['time'] = m.general.TimeHistory('Time', 1)
+    ttraces['Time'] = m.general.TimeHistory('Time', 1)
 
     for var in list_vars:
         name = ' '.join(var)
