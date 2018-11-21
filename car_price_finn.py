@@ -130,7 +130,7 @@ def getdata(url):
                                                  attrs={'class':
                                                  'unit flex align-items-stretch result-item'})):
 
-        finn_kode = hit.find('a')['data-finnkode']
+        finn_kode = int(hit.find('a')['data-finnkode'])
 
         hit_year = hit.find('span', attrs={'class': 'prm inlineblockify'})
         year = int(hit_year.text)
@@ -170,6 +170,9 @@ def getalldata(search_url):
     # fix index
     dataf = dataf.reset_index()
     del dataf['index']
+    
+    # Remove duplicates
+    dataf.drop_duplicates(inplace=True)
 
     return dataf
 
@@ -213,6 +216,8 @@ def get_all_detailed(data):
 def getstats(dataf):
     '''Calculate statistics for the data fetched.
     '''
+    if dataf.empty:
+        return None
     # dataf = dataf[dataf.kr != 'Solgt']  # get rid of sold cars for stats
     dataf = dataf[dataf.kr.apply(np.isreal)]
     years = list(set(dataf.year))
@@ -229,6 +234,8 @@ def getstats(dataf):
 def print_stats(stats):
     '''Print statistics from getstats().
     '''
+    if not stats:
+        return
     years = list(stats.keys())
     years.sort()
     print('year \t  # \t km ave \t km std \t kr ave \t kr std ')
@@ -283,19 +290,19 @@ def plot_all_stats(stats, norm=False, err_bars=False, min_year_user=0):
 class Car():
     '''Simple class to handle input of cars
     '''
-    def __init__(self, maker, model, fuel=None, karosseri=None):
+    def __init__(self, maker, model, fuel=None, body=None):
         self.maker = maker
         self.model = model
         self.fuel = fuel
-        self.karosseri = karosseri
+        self.body = body
 
         self.id = ' '.join([maker, model])
         if fuel:
             self.id += ' ' + fuel
-        if karosseri:
-            self.id += ' ' + karosseri
+        if body:
+            self.id += ' ' + body
 
-        self.url = build_url(makers_and_models, maker, model, fuel, karosseri)
+        self.url = build_url(makers_and_models, maker, model, fuel, body)
 
     def __eq__(self, other):
 
@@ -303,7 +310,7 @@ class Car():
                self.maker == other.maker \
                and self.model == other.model \
                and self.fuel == other.fuel \
-               and self.karosseri == other.karosseri
+               and self.body == other.body
 
 
 if __name__ == '__main__':
@@ -313,6 +320,8 @@ if __name__ == '__main__':
     print('Done')
 
     # Cars to be searched for
+    
+    # Select models to search
     #            maker, model, fuel=None, karosseri=None)
     cars = [Car('Toyota', 'Avensis', 'Diesel'),
             Car('Renault', 'Megane'),
@@ -321,6 +330,13 @@ if __name__ == '__main__':
             #Car('Volvo', 'V60'),
             #Car('Toyota', 'Auris'),
            ]
+    
+    # Going CWAZY ERE...
+    # Download the entire finn database
+    cars = list()
+    for maker in makers_and_models:
+        for model in makers_and_models[maker]['models']:
+            cars.append(Car(maker, model))
 
     try:
         data
@@ -329,9 +345,9 @@ if __name__ == '__main__':
 
     stats = dict()
 
-    for car in cars:
+    for i, car in enumerate(cars):
 
-        print('\n', '='*len(car.id), '\n', car.id, '\n', '='*len(car.id), '\n')
+        print('\n', '='*len(car.id), '\n', car.id, '\n', '='*len(car.id), '\n', i+1, '/', len(cars))
         if car.id not in data:
             data[car.id] = getalldata(car.url)
         else:
@@ -342,4 +358,10 @@ if __name__ == '__main__':
         print_stats(stats[car.id])
         print()
 
-    plot_all_stats(stats)
+    #plot_all_stats(stats)
+
+    # Save to database
+    if True:
+        import car_price_finn_database as db
+        db.save_to_database(cars, data)
+        

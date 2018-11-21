@@ -63,8 +63,8 @@ class MyApp(QtWidgets.QMainWindow):
         self.list_model = QtWidgets.QListWidget(self.centralwidget)
         self.label_fuel = QtWidgets.QLabel('Fuel', self.centralwidget)
         self.list_fuel = QtWidgets.QListWidget(self.centralwidget)
-        self.label_kar = QtWidgets.QLabel('Karosseri', self.centralwidget)
-        self.list_kar = QtWidgets.QListWidget(self.centralwidget)
+        self.label_body= QtWidgets.QLabel('Body', self.centralwidget)
+        self.list_body= QtWidgets.QListWidget(self.centralwidget)
 
         self.button_add = QtWidgets.QPushButton('Add', self.centralwidget)
         self.button_add.clicked.connect(self.add_selected)
@@ -116,9 +116,9 @@ class MyApp(QtWidgets.QMainWindow):
         layout3.addWidget(self.list_maker, 1, 0, 1, 1)
         layout3.addWidget(self.list_model, 1, 1, 1, 1)
         layout3.addWidget(self.label_fuel, 2, 0, 1, 1)
-        layout3.addWidget(self.label_kar, 2, 1, 1, 1)
+        layout3.addWidget(self.label_body, 2, 1, 1, 1)
         layout3.addWidget(self.list_fuel, 3, 0, 1, 1)
-        layout3.addWidget(self.list_kar, 3, 1, 1, 1)
+        layout3.addWidget(self.list_body, 3, 1, 1, 1)
         layout3.setRowStretch(1, 2)
         layout3.setRowStretch(3, 1)
 
@@ -149,8 +149,8 @@ class MyApp(QtWidgets.QMainWindow):
         self.list_maker.addItems(items)
         self.list_fuel.addItem('All')
         self.list_fuel.addItems(car_price_finn.fuel_types.keys())
-        self.list_kar.addItem('All')
-        self.list_kar.addItems(car_price_finn.karosseri_types.keys())
+        self.list_body.addItem('All')
+        self.list_body.addItems(car_price_finn.karosseri_types.keys())
         # Select first maker to fill models
         self.list_maker.setCurrentRow(0)
 
@@ -175,9 +175,9 @@ class MyApp(QtWidgets.QMainWindow):
         else:
             fuel = None
 
-        karosseri = self.list_kar.currentItem()
-        if karosseri and not karosseri.text() == 'All':
-            body = karosseri.text()
+        body = self.list_body.currentItem()
+        if body and not body.text() == 'All':
+            body = body.text()
         else:
             body = None
 
@@ -201,6 +201,12 @@ class MyApp(QtWidgets.QMainWindow):
         THIS NEEDS TO GO TO A THREAD...
         see SO for example...
         '''
+        
+        # some dummy plotting
+        self.mpl.canvas.ax.clear()
+        self.mpl.canvas.ax.plot([1,2],[4,3])
+        self.mpl.canvas.draw()
+        
         for car in self._car_selection:
 
             print('\n', '='*len(car.id), '\n', car.id, '\n', '='*len(car.id), '\n')
