@@ -19,7 +19,9 @@ Updated 28.10.2017 - converted to PyQt5
 
 import sys
 from PyQt5 import QtWidgets, QtCore, QtGui, uic
-from numpy import pi
+
+# from numpy import pi
+pi = 3.1415926535897932384626433832795
 
 qtCreatorFile = 'pipe_properties.ui'  # Enter file here.
 
