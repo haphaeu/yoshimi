@@ -13,7 +13,8 @@ Created on Sep 09 2018
 
 """
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtGui import QPainter
 from math import radians, sin, cos, exp
 import time
 
@@ -74,22 +75,22 @@ class WorkThread(QtCore.QThread):
         return
 
 
-class Window(QtGui.QWidget):
+class Window(QtWidgets.QWidget):
 
     def __init__(self):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.game = WorkThread(self)
         self.initUI()
         self.game.start()
 
     def initUI(self):
-        grid = QtGui.QGridLayout()
+        grid = QtWidgets.QGridLayout()
         self.setLayout(grid)
 
-        self.spinV = QtGui.QSlider()
-        self.spinP = QtGui.QSlider()
-        self.spinI = QtGui.QSlider()
-        self.spinD = QtGui.QSlider()
+        self.spinV = QtWidgets.QSlider()
+        self.spinP = QtWidgets.QSlider()
+        self.spinI = QtWidgets.QSlider()
+        self.spinD = QtWidgets.QSlider()
 
         self.spinV.setMaximum(100)
         self.spinP.setMaximum(100)
@@ -101,7 +102,7 @@ class Window(QtGui.QWidget):
         self.spinI.setOrientation(QtCore.Qt.Vertical)
         self.spinD.setOrientation(QtCore.Qt.Vertical)
 
-        grid.addItem(QtGui.QSpacerItem(500, 500), 0, 0)
+        grid.addItem(QtWidgets.QSpacerItem(500, 500), 0, 0)
         grid.addWidget(self.spinV, 0, 1)
         grid.addWidget(self.spinP, 0, 2)
         grid.addWidget(self.spinI, 0, 3)
@@ -144,7 +145,7 @@ class Window(QtGui.QWidget):
     def wheelEvent(self, event):
         if self.game.self_controlled:
             return
-        self.game.thrust = min(100, max(0, self.game.thrust + event.delta()/50))
+        self.game.thrust = min(100, max(0, self.game.thrust + event.angleDelta().y()/50))
         self.update()
 
     def keyPressEvent(self, e):
@@ -155,7 +156,7 @@ class Window(QtGui.QWidget):
                 self.game.thrust_on = True
 
     def paintEvent(self, e):
-        qp = QtGui.QPainter()
+        qp = QPainter()
         qp.begin(self)
         self.drawLines(qp)
         qp.end()
@@ -221,7 +222,7 @@ class Window(QtGui.QWidget):
 if __name__ == '__main__':
 
     import sys
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     window = Window()
     # window.resize(640, 480)
     window.show()
