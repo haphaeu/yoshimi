@@ -5,14 +5,15 @@ Spyder Editor
 This is a temporary script file.
 """
 import sys
-from PyQt4 import QtGui
-from PyQt4 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 
 import math
 
 _TAU = 2*math.pi
 
-class Example(QtGui.QWidget):
+class Example(QtWidgets.QWidget):
     
     def __init__(self):
         super(Example, self).__init__()
@@ -21,24 +22,24 @@ class Example(QtGui.QWidget):
         
     def initUI(self):
         
-        grid = QtGui.QGridLayout()
+        grid = QtWidgets.QGridLayout()
         self.setLayout(grid)
  
-        self.xspin1 = QtGui.QSlider()
+        self.xspin1 = QtWidgets.QSlider()
         self.xspin1.setMaximum(1000)
         self.xspin1.setOrientation(QtCore.Qt.Horizontal)
         grid.addWidget(self.xspin1, 1, 2)
         
-        self.xspin2 = QtGui.QSlider()
+        self.xspin2 = QtWidgets.QSlider()
         self.xspin2.setMaximum(1000)        
         self.xspin2.setOrientation(QtCore.Qt.Horizontal)
         grid.addWidget(self.xspin2, 2, 2)
         
-        self.yspin1 = QtGui.QSlider()
+        self.yspin1 = QtWidgets.QSlider()
         self.yspin1.setOrientation(QtCore.Qt.Vertical)
         grid.addWidget(self.yspin1, 0, 0)
         
-        self.yspin2 = QtGui.QSlider()
+        self.yspin2 = QtWidgets.QSlider()
         self.yspin2.setOrientation(QtCore.Qt.Vertical)
         grid.addWidget(self.yspin2, 0, 1)
         
@@ -112,7 +113,7 @@ class Example(QtGui.QWidget):
 
         
 def main():
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     ex = Example()
     sys.exit(app.exec_())
 

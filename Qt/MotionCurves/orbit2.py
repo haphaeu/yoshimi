@@ -7,17 +7,17 @@ Created on Tue Aug 16 15:44:46 2016
 @author: rarossi
 """
 
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 import numpy as np
-import scipy.interpolate as itp
+#import scipy.interpolate as itp
 from math import sin, cos
 from matplotlib import pyplot as plt
 from time import sleep
 
 
-class Window(QtGui.QWidget):
+class Window(QtWidgets.QWidget):
     def __init__(self):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
 
         # Constants
         self.G = 6.674e-11  # N*(m/kg)^2
@@ -57,7 +57,7 @@ class Window(QtGui.QWidget):
     def resizeEvent(self, ev):
         print('resize')
         self.scale_things()
-        QtGui.QWidget.resizeEvent(self, ev)
+        QtWidgets.QWidget.resizeEvent(self, ev)
 
 #    def mousePressEvent(self, event):
 #        pt = event.pos()
@@ -193,7 +193,7 @@ class Window(QtGui.QWidget):
 if __name__ == '__main__':
 
     import sys
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     window = Window()
     window.resize(640, 480)
     window.show()
