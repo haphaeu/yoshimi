@@ -116,6 +116,9 @@ class Window(QtWidgets.QWidget):
         # Help vars used for selection of multiple targets
         self.targets = []
         self.origin = 0, 0
+
+        print('Game started.')
+        draw()
         
         self.show()
 
@@ -148,7 +151,7 @@ class Window(QtWidgets.QWidget):
         else:
             # only 1 target, make the move
             row_target, col_target = targets[0]
-            row_kill, col_kill = int((row + row_target) / 2), int((col + col_target) / 2)
+            row_kill, col_kill = (row + row_target)//2, (col + col_target)//2
             board[row][col] = 0
             board[row_target][col_target] = 1
             board[row_kill][col_kill] = 0
@@ -160,8 +163,10 @@ class Window(QtWidgets.QWidget):
     def keyPressEvent(self, e):
         # press R to reset
         if e.key() == QtCore.Qt.Key_R:
+            print('Reset board.')
             global board
             board = copy.deepcopy(board0)
+            draw()
             self.update()
 
     def paintEvent(self, e):
@@ -211,8 +216,10 @@ class Window(QtWidgets.QWidget):
         # special mode - draw targets if multiple are possible
         if not self.targets == []:
             qp.setPen(QtCore.Qt.red)
+            qp.setBrush(QtCore.Qt.yellow)
             for row, col in self.targets:
                 x, y = 70 * col, 70 * row
+                qp.drawEllipse(x + 10, y + 10, s, s)
                 qp.drawLine(x, y, x + 70, y)
                 qp.drawLine(x, y, x, y + 70)
                 qp.drawLine(x + 70, y, x + 70, y + 70)
