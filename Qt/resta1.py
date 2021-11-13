@@ -9,6 +9,8 @@ Created on Jul 28 2021
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QPainter, QColor
+from PyQt5 import QtTest
+
 import copy
 import time
 
@@ -26,6 +28,13 @@ board0 = [
 
 board = copy.deepcopy(board0)
 board_hist = [copy.deepcopy(board)]
+
+solve_sequence = [
+    (5, 3), (4, 5), (6, 4), (6, 2), (3, 4), (6, 4), (1, 4), (2, 6), (4, 6),
+    (2, 3), (2, 6), (2, 1), (0, 2), (0, 4), (3, 2), (0, 2), (5, 2), (4, 0),
+    (2, 0), (4, 3), (4, 1), (4, 0), (2, 3), (2, 1), (2, 1), (4, 1), (4, 3),
+    (4, 5), (4, 5), (2, 5), (3, 3), (3, 1), (1, 3), (3, 4), (3, 1),
+]
 
 def rc2a1(row, col):
     return '%s%d' % ('ABCDEFG'[col], row + 1)
@@ -101,14 +110,16 @@ class Window(QtWidgets.QWidget):
         print('R to reset.')
         print('B to go back one move.')
         print('######################')
-        draw()
+
+        self.show_ascii_board = False
+
+        if self.show_ascii_board:
+            draw()
         
         self.show()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        print('resized to', self.size())
-        
         self.w = self.size().width()  # window width
         self.h = self.size().height() # window height
         self.l = min(self.w, self.h)  # board size
@@ -121,7 +132,10 @@ class Window(QtWidgets.QWidget):
         y = event.pos().y()
         row = (y - self.oy) // self.c
         col = (x - self.ox) // self.c
+        self.move(row, col)
 
+    def move(self, row, col):
+        print('Try move', row, col)
         if not self.targets == []:
             # Selecting from multiple targets
             targets = []
@@ -150,8 +164,10 @@ class Window(QtWidgets.QWidget):
             board[row_target][col_target] = 1
             board[row_kill][col_kill] = 0
             board_hist.append(copy.deepcopy(board))
-            print('Move', rc2a1(row, col), 'to', rc2a1(row_target, col_target))
-            draw()
+            print('Move', rc2a1(row, col), 'to',
+                  rc2a1(row_target, col_target))
+            if self.show_ascii_board:
+                draw()
         
         self.update()
         
@@ -173,7 +189,19 @@ class Window(QtWidgets.QWidget):
                 board = copy.deepcopy(board_hist[-1])
                 draw()
                 self.update()
-        
+        elif e.key() == QtCore.Qt.Key_A:
+            self.solve_me()
+            
+    def solve_me(self):
+        global board
+        global board_hist
+        board = copy.deepcopy(board0)
+        board_hist = [copy.deepcopy(board)]
+        self.update()
+        for row, col in solve_sequence:
+            QtTest.QTest.qWait(500)
+            self.move(row, col)
+            self.update()
 
     def paintEvent(self, e):
         qp = QPainter()
