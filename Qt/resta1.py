@@ -25,6 +25,7 @@ board0 = [
 ]
 
 board = copy.deepcopy(board0)
+board_hist = [copy.deepcopy(board)]
 
 def rc2a1(row, col):
     return '%s%d' % ('ABCDEFG'[col], row + 1)
@@ -155,19 +156,29 @@ class Window(QtWidgets.QWidget):
             board[row][col] = 0
             board[row_target][col_target] = 1
             board[row_kill][col_kill] = 0
+            board_hist.append(copy.deepcopy(board))
             print('Move', rc2a1(row, col), 'to', rc2a1(row_target, col_target))
             draw()
         
         self.update()
         
     def keyPressEvent(self, e):
-        # press R to reset
+        global board
+        global board_hist
         if e.key() == QtCore.Qt.Key_R:
             print('Reset board.')
-            global board
             board = copy.deepcopy(board0)
-            draw()
-            self.update()
+            board_hist = [copy.deepcopy(board)]
+        elif e.key() == QtCore.Qt.Key_B:
+            if len(board_hist) == 1:
+                print('Nothing to undo.')
+                return
+            else:
+                print('Undo last move.')
+                board_hist.pop()
+                board = copy.deepcopy(board_hist[-1])
+        draw()
+        self.update()
 
     def paintEvent(self, e):
         qp = QPainter()
