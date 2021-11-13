@@ -88,31 +88,8 @@ class Window(QtWidgets.QWidget):
 
         self.mousePressEvent = self.mouse_clicked
         
-        #self.animate_btn = QtWidgets.QPushButton('Animate')
-        #self.reset_btn = QtWidgets.QPushButton('Reset')
-        #self.plus_btn = QtWidgets.QPushButton('+')
-        #self.minus_btn = QtWidgets.QPushButton('-')
-        #
-        #self.animate_btn.clicked.connect(self.animate)
-        #self.reset_btn.clicked.connect(self.reset)
-        #self.plus_btn.clicked.connect(self.increase)
-        #self.minus_btn.clicked.connect(self.decrease)
-        #
-        #self.speed = QtWidgets.QSlider()
-        #self.speed.setValue(50)
-        #self.speed.setMaximum(100)
-        #self.speed.setOrientation(QtCore.Qt.Horizontal)
-        #self.speed.valueChanged.connect(self.speed_changed)
-        #
-        #grid.addWidget(self.animate_btn, 0, 1)
-        #grid.addWidget(self.reset_btn, 0, 2)
-        #grid.addWidget(self.plus_btn, 0, 3)
-        #grid.addWidget(self.minus_btn, 0, 4)
-        #grid.addWidget(self.speed, 1, 1, 1, 4)
-        #grid.addItem(QtWidgets.QSpacerItem(500, 500), 2, 0)
-        
         self.setWindowTitle('Resta Um')
-        self.setFixedSize(490, 490)
+        self.setMinimumSize(490, 490)
 
         # Help vars used for selection of multiple targets
         self.targets = []
@@ -128,11 +105,22 @@ class Window(QtWidgets.QWidget):
         
         self.show()
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        print('resized to', self.size())
+        
+        self.w = self.size().width()  # window width
+        self.h = self.size().height() # window height
+        self.l = min(self.w, self.h)  # board size
+        self.c = self.l // 7  # cell size
+        self.ox = (self.w - self.l) // 2  # x offset
+        self.oy = (self.h - self.l) // 2 # y offset
+        
     def mouse_clicked(self, event):
         x = event.pos().x()
         y = event.pos().y()
-        row = y // 70
-        col = x // 70
+        row = (y - self.oy) // self.c
+        col = (x - self.ox) // self.c
 
         if not self.targets == []:
             # Selecting from multiple targets
@@ -195,53 +183,76 @@ class Window(QtWidgets.QWidget):
 
     def drawLines(self, qp):
 
-        qp.setPen(QtCore.Qt.black)
-        qp.setBrush(QtCore.Qt.blue)
-
-        # background
-        qp.fillRect(0, 0, 490, 490, QtCore.Qt.white)
+        pen = qp.pen()
         
-        # draw the grid
-        qp.drawLine(140,   0, 350,   0)
-        qp.drawLine(140,  70, 350,  70)
-        qp.drawLine(  0, 140, 490, 140)
-        qp.drawLine(  0, 210, 490, 210)
-        qp.drawLine(  0, 280, 490, 280)
-        qp.drawLine(  0, 350, 490, 350)
-        qp.drawLine(140, 420, 350, 420)
-        qp.drawLine(140, 490, 350, 490)
+        qp.setPen(QtCore.Qt.black)
+        qp.setBrush(QtCore.Qt.darkRed)
 
-        qp.drawLine(  0, 140,   0, 350)
-        qp.drawLine( 70, 140,  70, 350)
-        qp.drawLine(140,   0, 140, 490)
-        qp.drawLine(210,   0, 210, 490)
-        qp.drawLine(280,   0, 280, 490)
-        qp.drawLine(350,   0, 350, 490)
-        qp.drawLine(420, 140, 420, 350)
-        qp.drawLine(490, 140, 490, 350)
+        w = self.w
+        h = self.h
+        c = self.c
+        ox, oy = self.ox, self.oy
+        
+        # background
+        qp.fillRect(0, 0, w, h, QtCore.Qt.white)
+        
+        # draw the board borders
+        pen.setWidth(5)
+        qp.setPen(pen)
+        qp.drawLine(2*c + ox, 0*c + oy, 5*c + ox, 0*c + oy)
+        qp.drawLine(2*c + ox, 7*c + oy, 5*c + ox, 7*c + oy)
+        qp.drawLine(0*c + ox, 2*c + oy, 0*c + ox, 5*c + oy)
+        qp.drawLine(7*c + ox, 2*c + oy, 7*c + ox, 5*c + oy)
+        qp.drawLine(0*c + ox, 2*c + oy, 2*c + ox, 2*c + oy)
+        qp.drawLine(5*c + ox, 2*c + oy, 7*c + ox, 2*c + oy)
+        qp.drawLine(0*c + ox, 5*c + oy, 2*c + ox, 5*c + oy)
+        qp.drawLine(5*c + ox, 5*c + oy, 7*c + ox, 5*c + oy)
+        qp.drawLine(2*c + ox, 0*c + oy, 2*c + ox, 2*c + oy)
+        qp.drawLine(2*c + ox, 5*c + oy, 2*c + ox, 7*c + oy)
+        qp.drawLine(5*c + ox, 0*c + oy, 5*c + ox, 2*c + oy)
+        qp.drawLine(5*c + ox, 5*c + oy, 5*c + ox, 7*c + oy)
 
+        # Inner grid
+        pen.setWidth(1)
+        qp.setPen(pen)
+        qp.drawLine(2*c + ox, 1*c + oy, 5*c + ox, 1*c + oy)
+        qp.drawLine(2*c + ox, 2*c + oy, 5*c + ox, 2*c + oy)
+        qp.drawLine(0*c + ox, 3*c + oy, 7*c + ox, 3*c + oy)
+        qp.drawLine(0*c + ox, 4*c + oy, 7*c + ox, 4*c + oy)
+        qp.drawLine(2*c + ox, 5*c + oy, 5*c + ox, 5*c + oy)
+        qp.drawLine(2*c + ox, 6*c + oy, 5*c + ox, 6*c + oy)
+        qp.drawLine(1*c + ox, 2*c + oy, 1*c + ox, 5*c + oy)
+        qp.drawLine(2*c + ox, 2*c + oy, 2*c + ox, 5*c + oy)
+        qp.drawLine(3*c + ox, 0*c + oy, 3*c + ox, 7*c + oy)
+        qp.drawLine(4*c + ox, 0*c + oy, 4*c + ox, 7*c + oy)
+        qp.drawLine(5*c + ox, 2*c + oy, 5*c + ox, 5*c + oy)
+        qp.drawLine(6*c + ox, 2*c + oy, 6*c + ox, 5*c + oy)
+        
         # draw the pegs
-        s = 50
-        y = 10
+        s = 2 * c // 4
+        y = oy + (c - s) // 2
         for row in board:
-            x = 10
+            x = ox + (c - s) // 2
             for peg in row:
                 if peg == 1:
                     qp.drawEllipse(x, y, s, s)
-                x += 70
-            y += 70
+                x += c
+            y += c
 
         # special mode - draw targets if multiple are possible
         if not self.targets == []:
             qp.setPen(QtCore.Qt.red)
-            qp.setBrush(QtCore.Qt.yellow)
+            pen = qp.pen()
+            pen.setWidth(2)
+            qp.setPen(pen)
+            qp.setBrush(QtCore.Qt.lightGray)
             for row, col in self.targets:
-                x, y = 70 * col, 70 * row
-                qp.drawEllipse(x + 10, y + 10, s, s)
-                qp.drawLine(x, y, x + 70, y)
-                qp.drawLine(x, y, x, y + 70)
-                qp.drawLine(x + 70, y, x + 70, y + 70)
-                qp.drawLine(x, y + 70, x + 70, y + 70)
+                x, y = ox + c * col, oy + c * row
+                qp.drawEllipse(x + (c - s) // 2, y + (c - s) // 2, s, s)
+                qp.drawLine(x, y, x + c, y)
+                qp.drawLine(x, y, x, y + c)
+                qp.drawLine(x + c, y, x + c, y + c)
+                qp.drawLine(x, y + c, x + c, y + c)
             
         #qp.drawText(10, 20, f'Disks: {self.N}')
         #qp.drawText(10, 35, f'Iteractions: {2**self.N-1}')
