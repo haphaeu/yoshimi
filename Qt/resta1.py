@@ -118,7 +118,12 @@ class Window(QtWidgets.QWidget):
         self.targets = []
         self.origin = 0, 0
 
-        print('Game started.')
+        print('### ######## ###')
+        print('### Resta Um ###')
+        print('### ######## ###')
+        print('R to reset.')
+        print('B to go back one move.')
+        print('######################')
         draw()
         
         self.show()
@@ -169,16 +174,18 @@ class Window(QtWidgets.QWidget):
             print('Reset board.')
             board = copy.deepcopy(board0)
             board_hist = [copy.deepcopy(board)]
+            draw()
+            self.update()
         elif e.key() == QtCore.Qt.Key_B:
             if len(board_hist) == 1:
                 print('Nothing to undo.')
-                return
             else:
                 print('Undo last move.')
                 board_hist.pop()
                 board = copy.deepcopy(board_hist[-1])
-        draw()
-        self.update()
+                draw()
+                self.update()
+        
 
     def paintEvent(self, e):
         qp = QPainter()
