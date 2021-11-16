@@ -30,15 +30,26 @@ board = copy.deepcopy(board0)
 board_hist = [copy.deepcopy(board)]
 
 solve_sequence = [
-    (5, 3), (4, 5), (6, 4), (6, 2), (3, 4), (6, 4), (1, 4), (2, 6), (4, 6),
-    (2, 3), (2, 6), (2, 1), (0, 2), (0, 4), (3, 2), (0, 2), (5, 2), (4, 0),
-    (2, 0), (4, 3), (4, 1), (4, 0), (2, 3), (2, 1), (2, 1), (4, 1), (4, 3),
-    (4, 5), (4, 5), (2, 5), (3, 3), (3, 1), (1, 3), (3, 4), (3, 1),
+    # sequence of moves in the form (row_from, col_from, row_to, col_to)
+    (5, 3, 3, 3), (4, 5, 4, 3), (6, 4, 4, 4), (6, 2, 6, 4), (3, 4, 5, 4),
+    (6, 4, 4, 4), (1, 4, 3, 4), (2, 6, 2, 4), (4, 6, 2, 6), (2, 3, 2, 5),
+    (2, 6, 2, 4), (2, 1, 2, 3), (0, 2, 2, 2), (0, 4, 0, 2), (3, 2, 1, 2),
+    (0, 2, 2, 2), (5, 2, 3, 2), (4, 0, 4, 2), (2, 0, 4, 0), (4, 3, 4, 1),
+    (4, 0, 4, 2), (2, 3, 2, 1), (2, 1, 4, 1), (4, 1, 4, 3), (4, 3, 4, 5),
+    (4, 5, 2, 5), (2, 5, 2, 3), (3, 3, 3, 1), (1, 3, 3, 3), (3, 4, 3, 2),
+    (3, 1, 3, 3),
 ]
+
 
 def rc2a1(row, col):
     return '%s%d' % ('ABCDEFG'[col], row + 1)
-    
+
+def reset():
+    global board
+    global board_hist
+    board = copy.deepcopy(board0)
+    board_hist = [copy.deepcopy(board)]
+
 def get_targets(row, col):
 
     # clicked on an empty cell or outside board -> nothing to do
@@ -52,24 +63,72 @@ def get_targets(row, col):
         (row - 2, col),
         (row + 2, col),
     ]
-    potential_kills = [
-        (row, col - 1),
-        (row, col + 1),
-        (row - 1, col),
-        (row + 1, col),
-    ]
     possible_targets = []
-    for (candidate_row, candidate_col), (kill_row, kill_col) in zip(
-            potential_targets, potential_kills
-    ):
-        if (0 <= candidate_row < 7
-            and 0 <= candidate_col < 7
-            and board[candidate_row][candidate_col] == 0
-            and board[kill_row][kill_col] == 1
-        ):
+    for candidate_row, candidate_col in potential_targets:
+        if is_valid_move(row, col, candidate_row, candidate_col):
             possible_targets.append((candidate_row, candidate_col))
     return possible_targets
 
+def is_valid_move(row, col, row_target, col_target):
+    row_kill, col_kill = (row + row_target)//2, (col + col_target)//2
+    return (
+        0 <= row < 7
+        and 0 <= col < 7
+        and board[row][col] == 1
+        and 0 <= row_target < 7
+        and 0 <= col_target < 7
+        and board[row_target][col_target] == 0
+        and board[row_kill][col_kill] == 1
+    )
+
+def get_all_possible_moves():
+    moves = {}
+    for i, row in enumerate(board):
+        for j, peg in enumerate(row):
+            targets = get_targets(i, j)
+            if targets:
+                moves[(i, j)] = targets
+    return moves
+
+def make_move(row, col, row_target, col_target):
+    if is_valid_move(row, col, row_target, col_target):
+        row_kill, col_kill = (row + row_target)//2, (col + col_target)//2
+        board[row][col] = 0
+        board[row_target][col_target] = 1
+        board[row_kill][col_kill] = 0
+        board_hist.append(copy.deepcopy(board))
+        return True
+    return False
+
+def solve(flag_draw=False):
+    for move in solve_sequence:
+        make_move(*move)
+        if flag_draw:
+            draw()
+    return score()
+
+def noob(flag_draw=False):
+    import random
+    reset()
+    moves = []
+    while get_all_possible_moves():
+        move = [random.randrange(0, 7) for i in range(4)]
+        if make_move(*move):
+            moves.append(move)
+        if flag_draw:
+            draw()
+    return moves, score()
+
+def solve_noob():
+    i, score = 0, 0
+    while score < 51:
+        moves, score = noob()
+        i += 1
+    print(i)
+    print(moves)
+    draw()
+
+    
 def draw():
     buffer = '   A B C D E G F\n'
     for k, row in enumerate(board):
@@ -84,6 +143,11 @@ def draw():
         buffer += '\n'
     print(buffer)
 
+def score():
+    total = 0
+    for row in board:
+        total += row.count(1)
+    return 100 / total
 
 class Window(QtWidgets.QWidget):
 
@@ -135,7 +199,7 @@ class Window(QtWidgets.QWidget):
         self.move(row, col)
 
     def move(self, row, col):
-        print('Try move', row, col)
+
         if not self.targets == []:
             # Selecting from multiple targets
             targets = []
@@ -150,22 +214,17 @@ class Window(QtWidgets.QWidget):
     
         if targets == []:
             # no targets, nothing to do
-            print('No valid moves.')
+            print('No valid moves for', row, col)
 
         elif len(targets) > 1:
-            print('Possible targets', [rc2a1(r, c) for r, c in targets])
+            print('Possible targets for', row, col, ':', targets)
             self.targets = targets
             self.origin = (row, col)
         else:
             # only 1 target, make the move
             row_target, col_target = targets[0]
-            row_kill, col_kill = (row + row_target)//2, (col + col_target)//2
-            board[row][col] = 0
-            board[row_target][col_target] = 1
-            board[row_kill][col_kill] = 0
-            board_hist.append(copy.deepcopy(board))
-            print('Move', rc2a1(row, col), 'to',
-                  rc2a1(row_target, col_target))
+            make_move(row, col, row_target, col_target)
+            print('Move', row, col, 'to', row_target, col_target)
             if self.show_ascii_board:
                 draw()
         
@@ -198,9 +257,10 @@ class Window(QtWidgets.QWidget):
         board = copy.deepcopy(board0)
         board_hist = [copy.deepcopy(board)]
         self.update()
-        for row, col in solve_sequence:
+        for move in solve_sequence:
             QtTest.QTest.qWait(500)
-            self.move(row, col)
+            make_move(*move)
+            draw()
             self.update()
 
     def paintEvent(self, e):
@@ -282,7 +342,7 @@ class Window(QtWidgets.QWidget):
                 qp.drawLine(x + c, y, x + c, y + c)
                 qp.drawLine(x, y + c, x + c, y + c)
             
-        #qp.drawText(10, 20, f'Disks: {self.N}')
+        qp.drawText(10, 20, 'Score: %.1f%%' % score())
         #qp.drawText(10, 35, f'Iteractions: {2**self.N-1}')
         #qp.drawText(10, 50, f'Step: {self.game.step}')
         #qp.drawText(10, 65, f'Delay: {self.game.timer} s')
