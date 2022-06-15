@@ -2,12 +2,11 @@
 
 # Tried without the Decimal, it does not converge.
 
-import sys
 import time
-import numpy as np
 from decimal import Decimal
 from math import floor, log10
-import matplotlib.pyplot as plt
+
+VERB = True
 
 
 def seq_a(theta, max_iters=99):
@@ -30,70 +29,42 @@ def concat(seq):
         loc += digits
         d = Decimal(a) / Decimal(10**loc)
         x += d
-        if False:
-             print('%4d' % a, f'{x:.{loc}f}', f'{d:.{loc}f}')
     return x
 
 
-def interval(a, b):
-    """Calculates thetas and taus in a given internal [a, b]."""
-    n = 10
-    delta = Decimal(b - a) / Decimal(n-1)
-    thetas = [a + delta * Decimal(i) for i in range(n)]
-    taus = []
-    for theta in thetas:
-        print(theta, end='\r')
-        it = seq_a(theta)
-        seq = []
-        for x in it:
-            seq.append(x)
-            precision = len(''.join([str(a) for a in seq[1:]]))
-            if precision > 25:
-                break
-        tau = concat(seq)
-        taus.append(tau)
-        
-    return thetas, taus
-
-
-def search(a, b):
-    """Return a sub-set of an interval [a, b] containing the root theta == tau."""
-    thetas, taus = interval(a, b)
-    diff = np.array(thetas) - np.array(taus)
-    idx = diff[diff < 0].size
-    a, b = thetas[idx-1:idx+1]
-    return a, b
-
-
 def main():
-    """Starting at [2.1, 2.9], gradually reduces the interval
-    until 25 digits precision is met.
+    """Starting at 2, calculate and concatenate a_n
+    and use output tau as new input theta. 
+    Convergence is achieved quickly.
     """
-    a, b = Decimal(2.1), Decimal(2.9)
-    eps = Decimal(1e-25)
-    max_iters=100
-
-    for i in range(max_iters):
-        a, b = search(a, b)
-        print(f'{a:.24f}, {b:.24f}', end='\r')
-        if abs(a - b) < eps:
-            print(f'\nReached tolerance after {i} interactions.')
+    x0 = Decimal(2)
+    if VERB: print(f'{x0:.24f}')
+    eps=Decimal('1e-24')
+    for i in range(99):
+        seq = list(seq_a(x0, 25))
+        x1 = concat(seq)
+        if VERB: print(f'{x1:.24f}')
+        if abs(x1 - x0) < eps:
+            if VERB: print(f'Converged after {i + 1} interactions.')
             break
-    else:
-        print('\nReached max iters')
+        x0 = x1
+    return x1
 
 
 if __name__ == '__main__':
     t0 = time.time()
-    main()
+    x = main()
     et = time.time() - t0
-    print(f'et: {et}')
+    if VERB: print(f'et: {et}')
 
 """
-Answer is
+2.000000000000000000000000
+2.222222222222222222222222
+2.223569173365129257513103
+2.223561019324056851562705
+2.223561019313554106181352
 2.223561019313554106173177
-
-2.223561019313554106173177, 2.223561019313554106173177
-Reached tolerance after 26 interactions.
-et: 0.05208015441894531
+2.223561019313554106173177
+Converged after 6 interactions.
+et: 0.0040018558502197266
 """
