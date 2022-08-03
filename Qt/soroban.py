@@ -28,17 +28,17 @@ class Window(QtWidgets.QWidget):
         self.mousePressEvent = self.mouse_clicked
         
         self.setWindowTitle('Soroban')
-        self.setMinimumSize(500, 270)
+        self.setMinimumSize(700, 270)
         
-        self.num_cols = 6 # number of columns/digits
-        self.target_aspect = 2 # target board aspect ratio
+        self.num_cols = 17 # number of columns/digits
+        self.target_aspect = 4 # target board aspect ratio
         self.bx = 20 # border x
         self.by = 40 # border y
         
         self.bead1_gap_at = self.num_cols * [0]
         self.bead5_gap_at = self.num_cols * [1]
         
-        self.dot_at = 0 # zero to represent integers, larger to do floats
+        #self.dot_at = 0 # zero to represent integers, larger to do floats
 
         self.show_value = True
         self.show()
@@ -52,11 +52,11 @@ class Window(QtWidgets.QWidget):
         
         # board size, lx x ly
         if self.w / self.h > self.target_aspect:
-            self.ly = self.h - 2* self.by
-            self.lx = 2* self.ly
+            self.ly = self.h - 2 * self.by
+            self.lx = self.target_aspect * self.ly
         else:
-            self.lx = self.w - 2*self.bx
-            self.ly = self.lx // 2
+            self.lx = self.w - 2 * self.bx
+            self.ly = self.lx // self.target_aspect
 
         self.cx = self.lx // self.num_cols
         self.cy = self.ly // 7
@@ -81,25 +81,19 @@ class Window(QtWidgets.QWidget):
         self.update()
         
     def keyPressEvent(self, e):
-        if e.key() == QtCore.Qt.Key_Right:
-            self.dot_at -= 1
-            self.dot_at = max(0, self.dot_at)
-        if e.key() == QtCore.Qt.Key_Left:
-            self.dot_at += 1
-            self.dot_at = min(self.num_cols, self.dot_at)
-        elif e.key() == QtCore.Qt.Key_R:
+        if e.key() == QtCore.Qt.Key_R:
             self.bead5_gap_at = self.num_cols * [1]
             self.bead1_gap_at = self.num_cols * [0]
         elif e.key() == QtCore.Qt.Key_V:
             self.show_value = not self.show_value
         self.update()
 
-    def value(self):
-        val = 0
-        for e, (p5, p1) in enumerate(zip(self.bead5_gap_at[::-1], self.bead1_gap_at[::-1])):
+    def str_value(self):
+        strval = ''
+        for e, (p5, p1) in enumerate(zip(self.bead5_gap_at, self.bead1_gap_at)):
             p5 = 1 - p5
-            val += (p1 + 5 * p5) * 10**(e - self.dot_at)
-        return val
+            strval += '%d' % (p1 + 5 * p5)
+        return strval
 
     def paintEvent(self, e):
         qp = QPainter()
@@ -133,26 +127,23 @@ class Window(QtWidgets.QWidget):
         qp.drawLine(bx + ox + lx, by + oy, bx + ox + lx, by + oy + ly)
         qp.drawLine(bx + ox + lx, by + oy + ly, bx + ox, by + oy + ly)
         qp.drawLine(bx + ox, by + oy + ly, bx + ox, by + oy)
-        qp.drawLine(bx + ox, by + oy + 2*cy, bx + ox + lx, by + oy + 2*cy)
+        qp.drawLine(bx + ox, by + oy + 2 * cy, bx + ox + lx, by + oy + 2 * cy)
 
-        # decimal dot
-        qp.setPen(QtCore.Qt.gray)
-        qp.setBrush(QtCore.Qt.gray)
-        pen.setWidth(1)
-        qp.setPen(pen)
-        qp.drawEllipse(bx + ox + lx - self.dot_at * cx - 3, by + oy + 2*cy - 3, 6, 6)
-
-        # rods (vertical, along y)
+        # rods (vertical, along y) and ref dots
         pen.setWidth(1)
         qp.setPen(pen)
         qp.setPen(QtCore.Qt.black)
-        ex = cx//2
+        qp.setBrush(QtCore.Qt.gray)
+        ex = cx // 2
         for i in range(self.num_cols):
-            qp.drawLine(ox + bx + i*cx + ex, oy + by, ox + bx + i*cx + ex, oy + by + ly)
+            qp.drawLine(ox + bx + i * cx + ex, oy + by, ox + bx + i * cx + ex, oy + by + ly)
+            if (i + 1) % 3 == 0:
+                # draw some ref dots
+                qp.drawEllipse(ox + bx + i * cx + ex - 3, by + oy + 2 * cy - 3, 6, 6)
 
         # draw the beads
         qp.setBrush(QtCore.Qt.darkRed)
-        
+
         sx = 3 * cx // 4
         sy = 3 * cy // 4
         ex = (cx - sx) // 2
@@ -172,12 +163,7 @@ class Window(QtWidgets.QWidget):
                 ibead += 1
 
         if self.show_value:
-            if self.dot_at == 0:
-                strval = f'{self.value():0{1 + self.num_cols}_d}'
-            else:
-                strval = f'{self.value():0{1 + self.num_cols}_.{self.dot_at}f}'
-            print(strval)
-            qp.drawText(10, 10, strval)
+            qp.drawText(10, 10, self.str_value())
         #qp.drawText(10, 35, f'Iteractions: {2**self.N-1}')
         #qp.drawText(10, 50, f'Step: {self.game.step}')
         #qp.drawText(10, 65, f'Delay: {self.game.timer} s')
