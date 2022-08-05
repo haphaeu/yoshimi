@@ -142,8 +142,6 @@ class Window(QtWidgets.QWidget):
                 qp.drawEllipse(ox + bx + i * cx + ex - 3, by + oy + 2 * cy - 3, 6, 6)
 
         # draw the beads
-        qp.setBrush(QtCore.Qt.darkRed)
-
         sx = 3 * cx // 4
         sy = 3 * cy // 4
         ex = (cx - sx) // 2
@@ -152,6 +150,10 @@ class Window(QtWidgets.QWidget):
             x = ox + bx + ix * cx + ex
             # 5-valued bead
             y = oy + by + ey + cy * (1 if self.bead5_gap_at[ix] == 0 else 0)
+            if ix in (0, 1, 5, 6, 7, 11, 12, 13):
+                qp.setBrush(QtCore.Qt.darkRed)
+            else:
+                qp.setBrush(QtCore.Qt.darkYellow)
             qp.drawEllipse(x, y, sx, sy)
             # 1-valued beads
             ibead = 0
