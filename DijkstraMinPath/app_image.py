@@ -8,15 +8,17 @@ source:
 http://stackoverflow.com/a/13370267/5069105
 """
 
-from PyQt4 import QtGui, QtCore
-import pathfinding as pf
 from os import path
+from PyQt5 import QtWidgets, QtGui, QtCore
+from matplotlib import pylab
+import pathfinding as pf
 
-class Window(QtGui.QWidget):
+
+class Window(QtWidgets.QWidget):
     def __init__(self):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self.view = View(self)
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(self.view)
         self.setFixedSize(self.view.w+40, self.view.h+40)        
         
@@ -24,10 +26,10 @@ class Window(QtGui.QWidget):
         self.view.scene().clear()
 
 
-class View(QtGui.QGraphicsView):
+class View(QtWidgets.QGraphicsView):
     def __init__(self, parent):
-        QtGui.QGraphicsView.__init__(self, parent)
-        self.setScene(QtGui.QGraphicsScene(self))
+        QtWidgets.QGraphicsView.__init__(self, parent)
+        self.setScene(QtWidgets.QGraphicsScene(self))
         self.setSceneRect(QtCore.QRectF(self.viewport().rect()))
         self.points = 0
         self.display_image(_imname_high)
@@ -85,13 +87,17 @@ def do_it(start, goal):
 
 _imname_high = 'plan.bmp'
 _imname_low = 'plan_low.bmp'
-_scale = 1204/400
+
+# Scale is ratio of high- over low-resolution images
+_scale = (len(pylab.imread(_imname_high)[0]) / 
+          len(pylab.imread(_imname_low)[0]))
+
 _imname_mp = 'plan_minpath.png'
 
 if __name__ == '__main__':
 
     import sys
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     window = Window()
     #window.resize(640, 480)
     window.show()

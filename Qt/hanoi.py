@@ -91,6 +91,8 @@ class Window(QtWidgets.QWidget):
         self.setWindowTitle('Tower of Hanoi')
         self.setFixedSize(640, 480)
         
+        self.pin_selected = 0
+
         self.N = 3
         self.solve()
         self.game.start()
@@ -120,6 +122,7 @@ class Window(QtWidgets.QWidget):
     def reset(self):
         self.game.animate = False
         self.game.step = 0
+        self.solve()
         self.pins = STACK[0]
         self.update()
     
@@ -131,12 +134,40 @@ class Window(QtWidgets.QWidget):
         self.game.animate = True
 
     def mousePressEvent(self, event):
-        pass
+        pin_clicked = 0
+
+        if event.y() > 250:
+            pin_clicked = 1 if event.x() < 215 else (2 if event.x() < 425 else 3)
+
+        if pin_clicked == 0:
+            return
+
+        if self.pin_selected == 0:
+            # no previous selection, select the pin
+            self.pin_selected = pin_clicked
+        else:
+            # source pin selected, now select destination pin
+            if self.pin_selected == pin_clicked:
+                # deselect the pin
+                self.pin_selected = 0
+            else:
+                # move disk from src to dst
+                src_pin = self.pin_selected - 1
+                dst_pin = pin_clicked - 1
+                
+                if self.pins[src_pin] and (not self.pins[dst_pin] or self.pins[src_pin][-1] < self.pins[dst_pin][-1]):
+                    disk = self.pins[src_pin].pop()
+                    self.pins[dst_pin].append(disk)
+                
+                # reset selection
+                self.pin_selected = 0
+            
+        self.update()
 
     def keyPressEvent(self, e):
-        # press C to toogle auto pilot
-        if e.key() == QtCore.Qt.Key_C:
-            pass
+        if e.key() == QtCore.Qt.Key_Escape:
+            self.pin_selected = 0
+            self.update()
 
     def paintEvent(self, e):
         qp = QPainter()
@@ -155,18 +186,19 @@ class Window(QtWidgets.QWidget):
         pin_h = 150
         
         # ground
-        qp.fillRect(0, ground, 640, 480 - ground, QtCore.Qt.blue)
+        qp.fillRect(0, ground, 640, 480 - ground, QtCore.Qt.gray)
 
         # draw the pins
         pos = [110, 320, 530]
-        wt2 = 5
-        for x in pos:
-            qp.fillRect(x - wt2, ground - pin_h, 2 * wt2, pin_h, QtCore.Qt.blue)
+        wt2 = [5, 5, 5]
+        wt2[self.pin_selected - 1] = 10 if self.pin_selected else 5
+        for x, wt in zip(pos, wt2):
+            qp.fillRect(x - wt, ground - pin_h, 2 * wt, pin_h, QtCore.Qt.black)
             
         # draw disks
-        diams = [50 + i * 150 / self.N for i in range(self.N)]
+        diams = [50 + i * 150 // self.N for i in range(self.N)]
         colors = [
-            QColor('maroon'),
+            QColor('maroon'),  # largest disk
             QColor('red'),
             QColor('purple'),
             QColor('fuchsia'),
@@ -175,14 +207,14 @@ class Window(QtWidgets.QWidget):
             QColor('olive'),
             QColor('yellow'),
             QColor('navy'),
-            QColor('teal'),
+            QColor('teal'),  # smallest disk
         ]
         
         for x, pin in zip(pos, self.pins):
             for i, disk in enumerate(pin):
                 diam = diams[disk-1]
-                qp.fillRect(x - diam/2, ground - 10 * (i+1), diam, 10, colors[disk-1])
-                qp.drawRect(x - diam/2, ground - 10 * (i+1), diam, 10)
+                qp.fillRect(x - diam//2, ground - 10 * (i+1), diam, 10, colors[len(colors) - disk])
+                qp.drawRect(x - diam//2, ground - 10 * (i+1), diam, 10)
         
         qp.drawText(10, 20, f'Disks: {self.N}')
         qp.drawText(10, 35, f'Iteractions: {2**self.N-1}')

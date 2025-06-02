@@ -115,12 +115,14 @@ class GridFromImage(GridWithWeights):
     def show_path(self, start, goal, came_from,
                   img_high=None, scale=1, save=False):
         if not img_high: img_high = self.figname
-        fig2 = pylab.imread(img_high)
+        fig = pylab.imread(img_high)
+        fig2 = fig.copy()
         current = goal
         while not current == start:
             x, y = current
             x *= scale
             y *= scale
+            x, y = int(x), int(y)
             fig2[y][x] = np.array([255, 0, 0], dtype=np.uint8)
             current = came_from[current]
         pylab.imshow(fig2)
